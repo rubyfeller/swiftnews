@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostService.Data;
+using PostService.Messaging;
 using PostService.Models;
 
 namespace PostService.Controllers
@@ -10,9 +11,11 @@ namespace PostService.Controllers
     public class PostController : ControllerBase
     {
         private readonly PostContext _context;
-        public PostController(PostContext context)
+        private readonly IRabbitMQProducer _rabbitMQProducer;
+        public PostController(PostContext context, IRabbitMQProducer rabbitMQProducer)
         {
             _context = context;
+            _rabbitMQProducer = rabbitMQProducer;
         }
 
         [HttpGet]
@@ -37,6 +40,11 @@ namespace PostService.Controllers
         {
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
+
+            _rabbitMQProducer.SendTestMessage("Hello World!");
+
+            Console.WriteLine("Message sent to RabbitMQ");
+
             return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
         }
 
