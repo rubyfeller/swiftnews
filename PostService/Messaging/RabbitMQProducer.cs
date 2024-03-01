@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using System.Text;
@@ -6,26 +7,39 @@ namespace PostService.Messaging
 {
     public class RabbitMQProducer : IRabbitMQProducer
     {
-        public void SendTestMessage<T>(T message)
+        private readonly IModel _channel;
+
+        public RabbitMQProducer(IOptions<RabbitMQOptions> options)
         {
             var factory = new ConnectionFactory()
             {
-                HostName = "host.docker.internal",
-                Port = 5672
+                HostName = options.Value.HostName,
+                ClientProvidedName = options.Value.ClientProvidedName,
+                Port = options.Value.Port
             };
-            using (var connection = factory.CreateConnection())
+            var connection = factory.CreateConnection();
+            _channel = connection.CreateModel();
+            _channel.QueueDeclare(queue: "test",
+                durable: false,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+        }
+
+        public void SendTestMessage<T>(T message)
+        {
+            try
             {
-                using var channel = connection.CreateModel();
-                channel.QueueDeclare(queue: "test",
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
                 var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
-                channel.BasicPublish(exchange: "",
+                _channel.BasicPublish(
+                    exchange: "",
                     routingKey: "test",
                     basicProperties: null,
                     body: body);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
     }
