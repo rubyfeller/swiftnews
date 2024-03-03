@@ -20,7 +20,7 @@ namespace PostService.Messaging
             var connection = factory.CreateConnection();
             _channel = connection.CreateModel();
             _channel.QueueDeclare(queue: "test",
-                durable: false,
+                durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null);
