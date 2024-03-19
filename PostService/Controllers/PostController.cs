@@ -1,6 +1,8 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostService.Data;
+using PostService.Dtos;
 using PostService.Messaging;
 using PostService.Models;
 
@@ -11,37 +13,46 @@ namespace PostService.Controllers
     public class PostController : ControllerBase
     {
         private readonly PostContext _context;
-        private readonly IRabbitMQProducer _rabbitMQProducer;
-        public PostController(PostContext context, IRabbitMQProducer rabbitMQProducer)
+        private readonly IMapper _mapper;
+        private readonly IPostRepo _repository;
+        // private readonly IRabbitMQProducer _rabbitMQProducer;
+        public PostController(PostContext context, IMapper mapper, IPostRepo repository)
         {
             _context = context;
-            _rabbitMQProducer = rabbitMQProducer;
+            _mapper = mapper;
+            _repository = repository;
+            // _rabbitMQProducer = rabbitMQProducer;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Post>>> GetAll()
+        public ActionResult<IEnumerable<PostReadDTO>> GetAll()
         {
-            return await _context.Posts.ToListAsync();
+            var posts = _repository.GetAllPosts();
+            return Ok(_mapper.Map<IEnumerable<PostReadDTO>>(posts));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Post>> GetById(int id)
+        public async Task<ActionResult<PostReadDTO>> GetById(int id)
         {
-            var post = await _context.Posts.FindAsync(id);
+            var post = _repository.GetPostById(id);
             if (post == null)
             {
                 return NotFound();
             }
-            return post;
+            return Ok(_mapper.Map<PostReadDTO>(post));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Post>> Create(Post post)
+        public async Task<ActionResult<PostReadDTO>> Create(PostCreateDTO postCreateDTO)
         {
-            _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
+            var post = _mapper.Map<Post>(postCreateDTO);
 
-            _rabbitMQProducer.SendTestMessage("Hello World!");
+            _repository.CreatePost(post);
+            _repository.SaveChanges();
+            
+            var postReadDTO = _mapper.Map<PostReadDTO>(post);
+
+            // _rabbitMQProducer.SendTestMessage("Hello World!");
 
             Console.WriteLine("Message sent to RabbitMQ");
 

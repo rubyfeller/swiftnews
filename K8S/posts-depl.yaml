@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: posts-depl
+  namespace: ingress-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postservice
+  template:
+    metadata:
+      labels:
+        app: postservice
+    spec:
+      containers:
+      - name: postservice
+        image: rubyfeller/postservice:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: posts-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: postservice
+  ports:
+    - name: postservice
+      protocol: TCP
+      port: 80
+      targetPort: 8080

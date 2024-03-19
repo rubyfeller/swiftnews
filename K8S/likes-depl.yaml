@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: likes-depl
+  namespace: ingress-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: likeservice
+  template:
+    metadata:
+      labels:
+        app: likeservice
+    spec:
+      containers:
+      - name: likeservice
+        image: rubyfeller/likeservice:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: likes-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: likeservice
+  ports:
+    - name: likeservice
+      protocol: TCP
+      port: 80
+      targetPort: 8080
