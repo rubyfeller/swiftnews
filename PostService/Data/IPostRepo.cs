@@ -1,13 +1,12 @@
 using PostService.Models;
 
-namespace PostService.Data
-{
-    public interface IPostRepo
-    {
-        bool SaveChanges();
+namespace PostService.Data;
 
-        IEnumerable<Post> GetAllPosts();
-        Post GetPostById(int id);
-        void CreatePost(Post post);
-    }
+public interface IPostRepo
+{
+    bool SaveChanges();
+
+    IEnumerable<Post> GetAllPosts();
+    Post GetPostById(int id);
+    void CreatePost(Post post);
 }

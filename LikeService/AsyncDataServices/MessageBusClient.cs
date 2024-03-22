@@ -1,7 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using AsyncDataServices;
-using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 
 namespace LikeService.AsyncDataServices
@@ -14,10 +12,9 @@ namespace LikeService.AsyncDataServices
 
         public MessageBusClient(IConfiguration configuration)
         {
-            _configuration = configuration; 
+            var _configuration = configuration; 
             var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"],
-                 Port = int.Parse(_configuration["RabbitMQPort"])};     
-
+                Port = int.Parse(_configuration["RabbitMQPort"])};
             try
             {
                 _connection = factory.CreateConnection();
@@ -62,14 +59,12 @@ namespace LikeService.AsyncDataServices
         public void Dispose()
         {
             Console.WriteLine("Message Bus disposed");
-            if (_channel.IsOpen)
-            {
-                _channel.Close();
-                _connection.Close();
-            }
+            if (!_channel.IsOpen) return;
+            _channel.Close();
+            _connection.Close();
         }
 
-        private void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
+        private static void RabbitMQ_ConnectionShutdown(object? sender, ShutdownEventArgs e)
         {
             Console.WriteLine("Connection has been shutdown");
         }

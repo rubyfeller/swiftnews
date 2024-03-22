@@ -2,14 +2,13 @@ using AutoMapper;
 using PostService.Dtos;
 using PostService.Models;
 
-namespace PostService.Profiles
+namespace PostService.Profiles;
+
+public class PostsProfile : Profile
 {
-    public class PostsProfile : Profile
+    public PostsProfile()
     {
-        public PostsProfile()
-        {
-            CreateMap<Post, PostReadDTO>();
-            CreateMap<PostCreateDTO, Post>();
-        }
+        CreateMap<Post, PostReadDTO>();
+        CreateMap<PostCreateDTO, Post>();
     }
 }

@@ -1,39 +1,38 @@
 using PostService.Models;
 
-namespace PostService.Data
+namespace PostService.Data;
+
+public class PostRepo : IPostRepo
 {
-    public class PostRepo : IPostRepo
+    private readonly PostContext _context;
+
+    public PostRepo(PostContext context)
     {
-        private readonly PostContext _context;
+        _context = context;
+    }
 
-        public PostRepo(PostContext context)
+    public void CreatePost(Post post)
+    {
+        if (post == null)
         {
-            _context = context;
+            throw new ArgumentNullException(nameof(post));
         }
 
-        public void CreatePost(Post post)
-        {
-            if (post == null)
-            {
-                throw new ArgumentNullException(nameof(post));
-            }
+        _context.Posts.Add(post);
+    }
 
-            _context.Posts.Add(post);
-        }
+    public IEnumerable<Post> GetAllPosts()
+    {
+        return _context.Posts.ToList();
+    }
 
-        public IEnumerable<Post> GetAllPosts()
-        {
-            return _context.Posts.ToList();
-        }
+    public Post GetPostById(int id)
+    {
+        return _context.Posts.FirstOrDefault(p => p.Id == id);
+    }
 
-        public Post GetPostById(int id)
-        {
-            return _context.Posts.FirstOrDefault(p => p.Id == id);
-        }
-
-        public bool SaveChanges()
-        {
-            return _context.SaveChanges() >= 0;
-        }
+    public bool SaveChanges()
+    {
+        return _context.SaveChanges() >= 0;
     }
 }

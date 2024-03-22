@@ -3,110 +3,105 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostService.Data;
 using PostService.Dtos;
-using PostService.Messaging;
 using PostService.Models;
 
-namespace PostService.Controllers
+namespace PostService.Controllers;
+
+[ApiController]
+[Route("/api/posts")]
+public class PostController : ControllerBase
 {
-    [ApiController]
-    [Route("/api/posts")]
-    public class PostController : ControllerBase
+    private readonly PostContext _context;
+    private readonly IMapper _mapper;
+    private readonly IPostRepo _repository;
+
+    public PostController(PostContext context, IMapper mapper, IPostRepo repository)
     {
-        private readonly PostContext _context;
-        private readonly IMapper _mapper;
-        private readonly IPostRepo _repository;
-        // private readonly IRabbitMQProducer _rabbitMQProducer;
-        public PostController(PostContext context, IMapper mapper, IPostRepo repository)
+        _context = context;
+        _mapper = mapper;
+        _repository = repository;
+    }
+
+    [HttpGet]
+    public ActionResult<IEnumerable<PostReadDTO>> GetAll()
+    {
+        var posts = _repository.GetAllPosts();
+        return Ok(_mapper.Map<IEnumerable<PostReadDTO>>(posts));
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<PostReadDTO>> GetById(int id)
+    {
+        var post = _repository.GetPostById(id);
+        if (post == null)
         {
-            _context = context;
-            _mapper = mapper;
-            _repository = repository;
-            // _rabbitMQProducer = rabbitMQProducer;
+            return NotFound();
         }
+        return Ok(_mapper.Map<PostReadDTO>(post));
+    }
 
-        [HttpGet]
-        public ActionResult<IEnumerable<PostReadDTO>> GetAll()
-        {
-            var posts = _repository.GetAllPosts();
-            return Ok(_mapper.Map<IEnumerable<PostReadDTO>>(posts));
-        }
+    [HttpPost]
+    public async Task<ActionResult<PostReadDTO>> Create(PostCreateDTO postCreateDTO)
+    {
+        var post = _mapper.Map<Post>(postCreateDTO);
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PostReadDTO>> GetById(int id)
-        {
-            var post = _repository.GetPostById(id);
-            if (post == null)
-            {
-                return NotFound();
-            }
-            return Ok(_mapper.Map<PostReadDTO>(post));
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<PostReadDTO>> Create(PostCreateDTO postCreateDTO)
-        {
-            var post = _mapper.Map<Post>(postCreateDTO);
-
-            _repository.CreatePost(post);
-            _repository.SaveChanges();
+        _repository.CreatePost(post);
+        _repository.SaveChanges();
             
-            var postReadDTO = _mapper.Map<PostReadDTO>(post);
+        var postReadDTO = _mapper.Map<PostReadDTO>(post);
+            
+        Console.WriteLine("Message sent to RabbitMQ");
 
-            // _rabbitMQProducer.SendTestMessage("Hello World!");
+        return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
+    }
 
-            Console.WriteLine("Message sent to RabbitMQ");
-
-            return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Post post)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Post post)
+    {
+        if (id != post.Id)
         {
-            if (id != post.Id)
-            {
-                return BadRequest();
-            }
-            _context.Entry(post).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PostExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return NoContent();
+            return BadRequest();
         }
-
-        private bool PostExists(int id)
+        _context.Entry(post).State = EntityState.Modified;
+        try
         {
-            return _context.Posts.Any(e => e.Id == id);
+            await _context.SaveChangesAsync();
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        catch (DbUpdateConcurrencyException)
         {
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null)
+            if (!PostExists(id))
             {
                 return NotFound();
             }
-            _context.Posts.Remove(post);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            else
+            {
+                throw;
+            }
         }
+        return NoContent();
+    }
 
-        [HttpGet("test")]
-        public ActionResult<string> Test()
+    private bool PostExists(int id)
+    {
+        return _context.Posts.Any(e => e.Id == id);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var post = await _context.Posts.FindAsync(id);
+        if (post == null)
         {
-            return "Hello from PostService!";
+            return NotFound();
         }
+        _context.Posts.Remove(post);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpGet("test")]
+    public ActionResult<string> Test()
+    {
+        return "Hello from PostService!";
     }
 }
