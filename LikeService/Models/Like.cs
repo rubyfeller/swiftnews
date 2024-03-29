@@ -13,6 +13,9 @@ namespace LikeService.Models
         [BsonElement("postid")]
         public int PostId { get; set; }
 
+        [BsonElement("userid")]
+        public int UserId { get; set; }
+
         [BsonElement("likedat")]
         public DateTime LikedAt { get; set; } = DateTime.UtcNow;
     }
