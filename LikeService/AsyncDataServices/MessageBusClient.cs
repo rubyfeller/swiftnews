@@ -4,7 +4,7 @@ using RabbitMQ.Client;
 
 namespace LikeService.AsyncDataServices
 {
-    public class MessageBusClient: IMessageBusClient
+    public class MessageBusClient : IMessageBusClient
     {
         private readonly IConfiguration _configuration;
         private readonly IConnection _connection;
@@ -12,14 +12,13 @@ namespace LikeService.AsyncDataServices
 
         public MessageBusClient(IConfiguration configuration)
         {
-            var _configuration = configuration; 
-            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"],
-                Port = int.Parse(_configuration["RabbitMQPort"])};
+            _configuration = configuration;
+            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"], Port = int.Parse(_configuration["RabbitMQPort"]) };
             try
             {
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
-                
+
                 _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
 
                 _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
@@ -32,29 +31,26 @@ namespace LikeService.AsyncDataServices
             }
         }
 
-        public void AddLike() {
-            var message = JsonSerializer.Serialize("1");
-
-            if (_connection.IsOpen)
-            {
-                Console.WriteLine("RabbitMQ connection open");
-                SendMessage(message);
-            }
-            else
-            {
-                Console.WriteLine("RabbitMQ connection closed");
-            }
+        public void AddLike(int postId)
+        {
+            SendMessage(new { action = "add", postId });
         }
 
-
-        private void SendMessage(string message)
+        public void RemoveLike(int postId)
         {
-            var body = Encoding.UTF8.GetBytes(message);
+            SendMessage(new { action = "remove",  postId });
+        }
+
+        private void SendMessage(object message)
+        {
+            var jsonMessage = JsonSerializer.Serialize(message);
+            var body = Encoding.UTF8.GetBytes(jsonMessage);
 
             _channel.BasicPublish(exchange: "trigger", routingKey: "", basicProperties: null, body: body);
 
-            Console.WriteLine($"Sent message: {message}");
+            Console.WriteLine($"Sent message: {jsonMessage}");
         }
+
 
         public void Dispose()
         {

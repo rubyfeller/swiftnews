@@ -1,76 +1,83 @@
-
 using System.Text;
+using System.Text.Json;
 using PostService.EventProcessing;
+using PostService.Models;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace PostService.AsyncDataServices;
-
-public class MessageBusSubscriber : BackgroundService
+namespace PostService.AsyncDataServices
 {
-    private readonly IConfiguration _configuration;
-    private readonly IEventProcessor _eventProcessor;
-    private IConnection _connection;
-    private IModel _channel;
-    private string _queueName;
-
-    public MessageBusSubscriber(IConfiguration configuration, IEventProcessor eventProcessor)
+    public class MessageBusSubscriber : BackgroundService
     {
-        _configuration = configuration;
-        _eventProcessor = eventProcessor;
+        private readonly IConfiguration _configuration;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        InitializeRabbitMQ();
-    }
-
-    private void InitializeRabbitMQ()
-    {
-        var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"], Port = int.Parse(_configuration["RabbitMQPort"]) };
-
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
-        _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
-        _queueName = _channel.QueueDeclare().QueueName;
-        _channel.QueueBind(queue: _queueName, exchange: "trigger", routingKey: "");
-
-        Console.WriteLine("Listening on the Message Bus");
-
-        _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
-    }
-
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        stoppingToken.ThrowIfCancellationRequested();
-
-        var consumer = new EventingBasicConsumer(_channel);
-
-        consumer.Received += (ModuleHandle, ea) =>
+        public MessageBusSubscriber(IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
         {
-            Console.WriteLine("Event received");
-
-            var body = ea.Body;
-            var notificationMessage = Encoding.UTF8.GetString(body.ToArray());
-
-            _eventProcessor.ProcessEvent(notificationMessage);
-        };
-
-        _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
-
-        return Task.CompletedTask;
-    }
-
-    private void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
-    {
-        Console.WriteLine("Connection Shutdown");
-    }
-
-    public override void Dispose()
-    {
-        if (_channel.IsOpen)
-        {
-            _channel.Close();
-            _connection.Close();
+            _configuration = configuration;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
-        base.Dispose();
+        protected override async Task<Task> ExecuteAsync(CancellationToken stoppingToken)
+        {
+            var factory = new ConnectionFactory
+            {
+                HostName = _configuration["RabbitMQHost"],
+                Port = int.Parse(_configuration["RabbitMQPort"])
+            };
+
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
+                var queueName = channel.QueueDeclare().QueueName;
+                channel.QueueBind(queue: queueName, exchange: "trigger", routingKey: "");
+
+                var consumer = new EventingBasicConsumer(channel);
+                consumer.Received += async (ModuleHandle, ea) =>
+                {
+                    var body = ea.Body;
+                    var notificationMessage = Encoding.UTF8.GetString(body.ToArray());
+
+                    var message = JsonSerializer.Deserialize<Message>(notificationMessage);
+
+                    if (message?.action != null)
+                    {
+                        Console.WriteLine(message.action + " message received");
+                    }
+
+                    using (var scope = _serviceScopeFactory.CreateScope())
+                    {
+                        var eventProcessor = scope.ServiceProvider.GetRequiredService<IEventProcessor>();
+
+                        if (message?.action == "add")
+                        {
+                            Console.WriteLine("Adding like");
+                            await eventProcessor.AddLike(message.postId.ToString());
+                        }
+                        else if (message?.action == "remove")
+                        {
+                            Console.WriteLine("Removing like");
+                            await eventProcessor.RemoveLike(message.postId.ToString());
+                        }
+                    }
+                };
+
+
+                channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, stoppingToken);
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            return base.StopAsync(cancellationToken);
+        }
     }
 }

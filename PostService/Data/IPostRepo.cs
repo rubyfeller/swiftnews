@@ -9,4 +9,6 @@ public interface IPostRepo
     IEnumerable<Post> GetAllPosts();
     Post GetPostById(int id);
     void CreatePost(Post post);
+    void LikePost(int postId);
+    void RemoveLike(int postId);
 }

@@ -19,7 +19,8 @@ namespace LikeService.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetLikes() {
+        public async Task<IActionResult> GetLikes()
+        {
             var likes = await _likeRepository.Get();
 
             return Ok(likes);
@@ -38,38 +39,46 @@ namespace LikeService.Controllers
             return Ok(like);
         }
 
-        [HttpPost]
-        public IActionResult AddLike()
+        [HttpPost("{id}")]
+        public async Task<IActionResult> AddLike(int id)
         {
-
             try
             {
-                _likeRepository.Create(new Like());
-                _messageBusClient.AddLike();
+                await _likeRepository.Create(new Like(postid: id));
+                _messageBusClient.AddLike(id);
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 Console.WriteLine($"Could not send: {ex.Message}");
-                
+
                 return StatusCode(500, "Could not send message");
             }
 
             return Ok("Like added!");
         }
 
+
         [HttpDelete("{id}")]
-        public IActionResult RemoveLike(string id)
+        public async Task<IActionResult> RemoveLike(string id)
         {
-            var like = _likeRepository.Get(id);
-
-            if (like == null)
+            try
             {
-                return NotFound();
+                var like = await _likeRepository.Get(id);
+
+                if (like == null)
+                {
+                    return NotFound();
+                }
+
+                await _likeRepository.Remove(id);
+                _messageBusClient.RemoveLike(like.PostId);
+
+                return Ok("Like removed!");
             }
-
-            _likeRepository.Remove(id);
-
-            return Ok("Like removed!");
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

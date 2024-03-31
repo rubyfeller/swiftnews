@@ -6,11 +6,17 @@ namespace LikeService.Models
 {
     public class Like
     {
+        public Like(int postid)
+        {
+            PostId = postid;
+        }
+
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
 
         [BsonElement("postid")]
+        [BsonRequired]
         public int PostId { get; set; }
 
         [BsonElement("userid")]

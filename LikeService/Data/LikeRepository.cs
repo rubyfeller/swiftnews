@@ -21,7 +21,15 @@ public class LikeRepository : ILikeRepository
 
     public async Task<Like> Get(string id)
     {
-        return await _likes.Find<Like>(like => like.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+        try
+        {
+            var objectId = ObjectId.Parse(id);
+            return await _likes.Find<Like>(like => like.Id == objectId).FirstOrDefaultAsync();
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
     }
 
     public async Task<Like> Create(Like like)
@@ -32,6 +40,14 @@ public class LikeRepository : ILikeRepository
 
     public async Task Remove(string id)
     {
-        await _likes.DeleteOneAsync(like => like.Id == ObjectId.Parse(id));
+        try
+        {
+            var objectId = ObjectId.Parse(id);
+            await _likes.DeleteOneAsync(like => like.Id == objectId);
+        }
+        catch (FormatException)
+        {
+            throw new ArgumentException("Invalid ID format. Please provide a valid 24 digit hex string.", nameof(id));
+        }
     }
 }

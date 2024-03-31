@@ -50,8 +50,6 @@ public class PostController : ControllerBase
             
         var postReadDTO = _mapper.Map<PostReadDTO>(post);
             
-        Console.WriteLine("Message sent to RabbitMQ");
-
         return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
     }
 

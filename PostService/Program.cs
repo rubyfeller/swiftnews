@@ -18,8 +18,8 @@ builder.Services.AddDbContext<PostContext>(options =>
 
 builder.Services.AddScoped<IPostRepo, PostRepo>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
-builder.Services.AddHostedService<MessageBusSubscriber>();
+builder.Services.AddScoped<IEventProcessor, EventProcessor>();
+builder.Services.AddSingleton<IHostedService, MessageBusSubscriber>();
 
 var app = builder.Build();
 await using var scope = app.Services.CreateAsyncScope();

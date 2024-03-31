@@ -22,6 +22,8 @@ builder.Services.AddSingleton<ILikeStoreDatabaseSettings>(sp => sp.GetRequiredSe
 builder.Services.AddSingleton<IMongoClient>(s =>
     new MongoClient(builder.Configuration.GetValue<string>("LikeStoreDatabaseSettings:ConnectionString")));
 
+Console.WriteLine(builder.Configuration.GetValue<string>("LikeStoreDatabaseSettings:ConnectionString"));
+
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 
 var app = builder.Build();

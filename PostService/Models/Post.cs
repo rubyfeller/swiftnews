@@ -13,6 +13,8 @@ public class Post
     public int Id { get; set; }
     [Column("content")]
     public string Content { get; set; }
+    [Column("like_count")]
+    public int LikeCount { get; set; }
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
     [Column("author")]
