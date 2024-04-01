@@ -1,4 +1,5 @@
 using LikeService.AsyncDataServices;
+using LikeService.Clients;
 using LikeService.Data;
 using LikeService.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +12,13 @@ namespace LikeService.Controllers
     {
         private readonly IMessageBusClient _messageBusClient;
         private readonly ILikeRepository _likeRepository;
+        private readonly IPostServiceClient _postServiceClient;
 
-        public LikeController(IMessageBusClient messageBusClient, ILikeRepository likeRepository)
+        public LikeController(IMessageBusClient messageBusClient, ILikeRepository likeRepository, IPostServiceClient postServiceClient)
         {
             _messageBusClient = messageBusClient;
             _likeRepository = likeRepository;
+            _postServiceClient = postServiceClient;
         }
 
         [HttpGet]
@@ -44,19 +47,23 @@ namespace LikeService.Controllers
         {
             try
             {
+                var postExists = await _postServiceClient.CheckPostExistence(id);
+                if (!postExists)
+                {
+                    return NotFound("Post does not exist");
+                }
+
                 await _likeRepository.Create(new Like(postid: id));
                 _messageBusClient.AddLike(id);
+
+                return Ok("Like added!");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Could not send: {ex.Message}");
-
                 return StatusCode(500, "Could not send message");
             }
-
-            return Ok("Like added!");
         }
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> RemoveLike(string id)

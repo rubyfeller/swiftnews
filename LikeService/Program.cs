@@ -1,4 +1,5 @@
 using LikeService.AsyncDataServices;
+using LikeService.Clients;
 using LikeService.Data;
 using LikeService.Models;
 using Microsoft.Extensions.Options;
@@ -25,6 +26,12 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 Console.WriteLine(builder.Configuration.GetValue<string>("LikeStoreDatabaseSettings:ConnectionString"));
 
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+
+builder.Services.AddHttpClient<IPostServiceClient, PostServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("PostServiceSettings:BaseUrl"));
+});
+
 
 var app = builder.Build();
 

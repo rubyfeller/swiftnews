@@ -47,9 +47,9 @@ public class PostController : ControllerBase
 
         _repository.CreatePost(post);
         _repository.SaveChanges();
-            
+
         var postReadDTO = _mapper.Map<PostReadDTO>(post);
-            
+
         return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
     }
 
@@ -82,6 +82,13 @@ public class PostController : ControllerBase
     private bool PostExists(int id)
     {
         return _context.Posts.Any(e => e.Id == id);
+    }
+
+    [HttpGet("{id}/exists")]
+    public ActionResult<bool> Exists(int id)
+    {
+        var postExists = PostExists(id);
+        return Ok(postExists);
     }
 
     [HttpDelete("{id}")]
