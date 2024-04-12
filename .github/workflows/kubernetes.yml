@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   sonarcloud:
-    name: SonarCloud
+    name: SonarCloud - K8S
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

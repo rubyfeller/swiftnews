@@ -8,26 +8,40 @@ on:
 
 jobs:
   build:
-
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8.0.x
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Restore dependencies for PostService
-      run: dotnet restore ./PostService
-    - name: Build PostService
-      run: dotnet build ./PostService --no-restore
-    - name: Test PostService
-      run: dotnet test ./PostService --no-build --verbosity normal
+      - name: Restore dependencies for PostService
+        run: dotnet restore ./PostService
+      - name: Build PostService
+        run: dotnet build ./PostService --no-restore
 
-    - name: Restore dependencies for LikeService
-      run: dotnet restore ./LikeService
-    - name: Build LikeService
-      run: dotnet build ./LikeService --no-restore
-    - name: Test LikeService
-      run: dotnet test ./LikeService --no-build --verbosity normal
+      - name: Restore dependencies for LikeService
+        run: dotnet restore ./LikeService
+      - name: Build LikeService
+        run: dotnet build ./LikeService --no-restore
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Test PostService
+        run: dotnet test ./PostService --no-build --verbosity normal
+
+      - name: Test LikeService
+        run: dotnet test ./LikeService --no-build --verbosity normal
