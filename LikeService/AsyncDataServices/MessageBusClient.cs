@@ -10,16 +10,23 @@ namespace LikeService.AsyncDataServices
         private readonly IConnection _connection;
         private readonly IModel _channel;
 
-        public MessageBusClient(IConfiguration configuration)
+        public MessageBusClient(IConfiguration configuration, ILogger<MessageBusClient> logger, IConnection connection)
         {
             _configuration = configuration;
-            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"], Port = int.Parse(_configuration["RabbitMQPort"]) };
+            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"] };
+            
+            var portString = _configuration["RabbitMQPort"];
+            if (portString != null && int.TryParse(portString, out int port))
+            {
+                factory.Port = port;
+            }
+
             try
             {
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
 
-                _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
+                _channel.ExchangeDeclare(exchange: "pubsub", type: ExchangeType.Fanout);
 
                 _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
 
@@ -38,19 +45,25 @@ namespace LikeService.AsyncDataServices
 
         public void RemoveLike(int postId)
         {
-            SendMessage(new { action = "remove",  postId });
+            SendMessage(new { action = "remove", postId });
         }
 
         private void SendMessage(object message)
         {
+            Console.WriteLine("SendMessage called");
+            if (_channel == null)
+            {
+                Console.WriteLine("Channel is not initialized");
+                return;
+            }
+            
             var jsonMessage = JsonSerializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(jsonMessage);
 
-            _channel.BasicPublish(exchange: "trigger", routingKey: "", basicProperties: null, body: body);
+            _channel.BasicPublish(exchange: "pubsub", routingKey: "", basicProperties: null, body: body);
 
             Console.WriteLine($"Sent message: {jsonMessage}");
         }
-
 
         public void Dispose()
         {

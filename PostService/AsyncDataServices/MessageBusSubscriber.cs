@@ -29,9 +29,9 @@ namespace PostService.AsyncDataServices
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
+                channel.ExchangeDeclare(exchange: "pubsub", type: ExchangeType.Fanout);
                 var queueName = channel.QueueDeclare().QueueName;
-                channel.QueueBind(queue: queueName, exchange: "trigger", routingKey: "");
+                channel.QueueBind(queue: queueName, exchange: "pubsub", routingKey: "");
 
                 var consumer = new EventingBasicConsumer(channel);
                 consumer.Received += async (ModuleHandle, ea) =>
@@ -62,8 +62,7 @@ namespace PostService.AsyncDataServices
                         }
                     }
                 };
-
-
+                
                 channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
 
                 while (!stoppingToken.IsCancellationRequested)

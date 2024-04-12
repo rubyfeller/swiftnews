@@ -1,37 +1,49 @@
-name: Monorepo SonarQube Scan
+name: SonarCloud
 on:
   push:
-      branches:
-      - main
-      paths:
-      - 'lambdas/test/**'
+    branches: [ "main" ]
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ "main" ]
+
 jobs:
-  sonarcloudScan1:
-    name: SonarCloudScan1
+  sonarcloud_likeservice:
+    name: SonarCloud - LikeService
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  
-      - name: SonarCloud Scan
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: SonarCloud Scan - LikeService
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_LIKESERVICE }}
         with:
-          projectBaseDir: LikeService/
-          
-  sonarcloudScan2:
-    name: SonarCloudScan2
+          projectBaseDir: ./LikeService  # Adjust the path to the LikeService project
+
+  sonarcloud_postservice:
+    name: SonarCloud - PostService
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env: 
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
-          projectBaseDir: PostService/
+          dotnet-version: 8.0.x
+
+      - name: SonarCloud Scan - PostService
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_POSTSERVICE }}
+        with:
+          projectBaseDir: ./PostService

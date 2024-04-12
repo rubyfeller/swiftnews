@@ -19,7 +19,7 @@ public class RabbitMQProducer : IRabbitMQProducer
         };
         var connection = factory.CreateConnection();
         _channel = connection.CreateModel();
-        _channel.QueueDeclare(queue: "test",
+        _channel.QueueDeclare(queue: "pubsub",
             durable: true,
             exclusive: false,
             autoDelete: false,
