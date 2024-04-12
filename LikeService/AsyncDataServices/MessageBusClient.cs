@@ -7,8 +7,8 @@ namespace LikeService.AsyncDataServices
     public class MessageBusClient : IMessageBusClient
     {
         private readonly IConfiguration _configuration;
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
+        private readonly IConnection? _connection;
+        private readonly IModel? _channel;
 
         public MessageBusClient(IConfiguration configuration, ILogger<MessageBusClient> logger, IConnection connection)
         {
@@ -50,7 +50,6 @@ namespace LikeService.AsyncDataServices
 
         private void SendMessage(object message)
         {
-            Console.WriteLine("SendMessage called");
             if (_channel == null)
             {
                 Console.WriteLine("Channel is not initialized");
@@ -68,9 +67,9 @@ namespace LikeService.AsyncDataServices
         public void Dispose()
         {
             Console.WriteLine("Message Bus disposed");
-            if (!_channel.IsOpen) return;
-            _channel.Close();
-            _connection.Close();
+            if (_channel != null && !_channel.IsOpen) return;
+            _channel?.Close();
+            _connection?.Close();
         }
 
         private static void RabbitMQ_ConnectionShutdown(object? sender, ShutdownEventArgs e)

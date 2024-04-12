@@ -23,7 +23,7 @@ namespace PostService.AsyncDataServices
             var factory = new ConnectionFactory
             {
                 HostName = _configuration["RabbitMQHost"],
-                Port = int.Parse(_configuration["RabbitMQPort"])
+                Port = int.TryParse(_configuration["RabbitMQPort"], out int port) ? port : 5672
             };
 
             using (var connection = factory.CreateConnection())

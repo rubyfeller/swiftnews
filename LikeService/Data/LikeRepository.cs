@@ -19,12 +19,12 @@ public class LikeRepository : ILikeRepository
         return await _likes.Find(like => true).ToListAsync();
     }
 
-    public async Task<Like> Get(string id)
+    public async Task<Like?> Get(string id)
     {
         try
         {
             var objectId = ObjectId.Parse(id);
-            return await _likes.Find<Like>(like => like.Id == objectId).FirstOrDefaultAsync();
+            return await _likes.Find(like => like.Id == objectId).FirstOrDefaultAsync();
         }
         catch (FormatException)
         {

@@ -30,7 +30,7 @@ public class PostController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<PostReadDTO>> GetById(int id)
+    public ActionResult<PostReadDTO> GetById(int id)
     {
         var post = _repository.GetPostById(id);
         if (post == null)
@@ -41,7 +41,7 @@ public class PostController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<PostReadDTO>> Create(PostCreateDTO postCreateDTO)
+    public ActionResult<PostReadDTO> Create(PostCreateDTO postCreateDTO)
     {
         var post = _mapper.Map<Post>(postCreateDTO);
 
@@ -102,11 +102,5 @@ public class PostController : ControllerBase
         _context.Posts.Remove(post);
         await _context.SaveChangesAsync();
         return NoContent();
-    }
-
-    [HttpGet("test")]
-    public ActionResult<string> Test()
-    {
-        return "Hello from PostService!";
     }
 }

@@ -47,12 +47,6 @@ namespace LikeService.Controllers
         {
             try
             {
-                var postExists = await _postServiceClient.CheckPostExistence(id);
-                if (!postExists)
-                {
-                    return NotFound("Post does not exist");
-                }
-
                 await _likeRepository.Create(new Like(postid: id));
                 _messageBusClient.AddLike(id);
 

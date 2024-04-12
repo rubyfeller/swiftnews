@@ -26,7 +26,7 @@ public class PostRepo : IPostRepo
         return _context.Posts.ToList();
     }
 
-    public Post GetPostById(int id)
+    public Post? GetPostById(int id)
     {
         return _context.Posts.FirstOrDefault(p => p.Id == id);
     }
