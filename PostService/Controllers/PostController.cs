@@ -48,8 +48,6 @@ public class PostController : ControllerBase
         _repository.CreatePost(post);
         _repository.SaveChanges();
 
-        var postReadDTO = _mapper.Map<PostReadDTO>(post);
-
         return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
     }
 

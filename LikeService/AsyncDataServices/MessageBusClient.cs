@@ -13,7 +13,9 @@ namespace LikeService.AsyncDataServices
         public MessageBusClient(IConfiguration configuration, ILogger<MessageBusClient> logger, IConnection connection)
         {
             _configuration = configuration;
-            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"] };
+            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"]};
+
+            Console.WriteLine("Connection string: " + _configuration["RabbitMQHost"] + ":" + _configuration["RabbitMQPort"]);
             
             var portString = _configuration["RabbitMQPort"];
             if (portString != null && int.TryParse(portString, out int port))

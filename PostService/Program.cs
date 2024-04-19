@@ -14,7 +14,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<PostContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostsConn")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+Console.WriteLine("Connection string: " + builder.Configuration.GetConnectionString("DefaultConnection"));
 
 builder.Services.AddScoped<IPostRepo, PostRepo>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

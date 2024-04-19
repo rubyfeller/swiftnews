@@ -26,7 +26,9 @@ namespace PostService.AsyncDataServices
                 Port = int.TryParse(_configuration["RabbitMQPort"], out int port) ? port : 5672
             };
 
-            using (var connection = factory.CreateConnection())
+            Console.WriteLine("Connection string: " + _configuration["RabbitMQHost"] + ":" + _configuration["RabbitMQPort"]);
+
+            using (var connection = factory.CreateConnection())            
             using (var channel = connection.CreateModel())
             {
                 channel.ExchangeDeclare(exchange: "pubsub", type: ExchangeType.Fanout);

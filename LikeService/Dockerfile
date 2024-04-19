@@ -15,5 +15,6 @@ RUN dotnet publish "LikeService.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8081
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "LikeService.dll"]

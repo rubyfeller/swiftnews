@@ -36,6 +36,14 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "Docker": {
+      "commandName": "DockerCompose",
+      "httpPort": 8081,
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://+:8081",
+        "ASPNETCORE_ENVIRONMENT": "Docker"
+      }
     }
   }
 }

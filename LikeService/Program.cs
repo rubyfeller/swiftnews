@@ -3,6 +3,7 @@ using LikeService.Clients;
 using LikeService.Data;
 using LikeService.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic;
 using MongoDB.Driver;
 using RabbitMQ.Client;
 
@@ -15,9 +16,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var factory = new ConnectionFactory() { HostName = builder.Configuration["RabbitMQHost"] };
+var factory = new ConnectionFactory() { HostName = builder.Configuration["RabbitMQHost"], Port = builder.Configuration.GetValue<int>("RabbitMQPort")};
+Console.WriteLine(factory);
+Console.WriteLine("Connection string Rabbit: " + builder.Configuration["RabbitMQHost"] + ":" + builder.Configuration["RabbitMQPort"]);
+Console.WriteLine("Creating connection");
 builder.Services.AddSingleton<IConnection>(sp => factory.CreateConnection());
-
+Console.WriteLine("Add messagebus client");
 builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
 
 builder.Services.Configure<LikeStoreDatabaseSettings>(builder.Configuration.GetSection(nameof(LikeStoreDatabaseSettings)));
@@ -27,13 +31,14 @@ builder.Services.AddSingleton<ILikeStoreDatabaseSettings>(sp => sp.GetRequiredSe
 builder.Services.AddSingleton<IMongoClient>(s =>
     new MongoClient(builder.Configuration.GetValue<string>("LikeStoreDatabaseSettings:ConnectionString")));
 
+Console.WriteLine("Connection string: " + builder.Configuration.GetValue<string>("LikeStoreDatabaseSettings:ConnectionString"));
+
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 
 builder.Services.AddHttpClient<IPostServiceClient, PostServiceClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("PostServiceSettings:BaseUrl"));
 });
-
 
 var app = builder.Build();
 
