@@ -26,7 +26,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
     public async Task<IContainer> StartMongoContainerAsync()
     {
         var container = new ContainerBuilder()
-            .WithImage("mongo:latest")
+            .WithImage("mongo")
             .WithPortBinding(27017, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
             .Build();
@@ -43,7 +43,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 
         var likeServiceContainer = new ContainerBuilder()
-            .WithImage("rubyfeller/likeservice:latest")
+            .WithImage("rubyfeller/likeservice")
             .WithPortBinding(8081, true)
             .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString",
                 $"mongodb://host.docker.internal:{mongoPort}")
@@ -62,7 +62,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
     public async Task<IContainer> StartPostgresContainerAsync()
     {
         var container = new ContainerBuilder()
-            .WithImage("postgres:latest")
+            .WithImage("postgres")
             .WithEnvironment("POSTGRES_USER", "postgres")
             .WithEnvironment("POSTGRES_PASSWORD", "postgres")
             .WithEnvironment("POSTGRES_DB", "postgres")
@@ -84,7 +84,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 
         var postServiceContainer = new ContainerBuilder()
-            .WithImage("rubyfeller/postservice:latest")
+            .WithImage("rubyfeller/postservice")
             .WithPortBinding(8080, true)
             .WithEnvironment("ConnectionStrings__DefaultConnection",
                 $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")

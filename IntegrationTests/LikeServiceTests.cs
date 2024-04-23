@@ -77,7 +77,7 @@ public class LikeServiceTests
         var likeResponse = await httpClient.PostAsync(likeUri, null);
         likeResponse.EnsureSuccessStatusCode();
 
-        await Task.Delay(1);
+        await Task.Delay(1000);
         
         var getUri =
             new UriBuilder(
