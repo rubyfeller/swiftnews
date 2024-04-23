@@ -54,11 +54,9 @@ public class MessageExchangeTests
     {
         // Arrange
         var rabbitmqContainer = await _fixture.StartRabbitMQContainerAsync();
-
         var mongoContainer = await _fixture.StartMongoContainerAsync();
-
         var likeServiceContainer = await _fixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
-
+        
         var likeServicePort = likeServiceContainer.GetMappedPublicPort(8081);
         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 

@@ -18,7 +18,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(false);
         _containers["rabbitmq"] = container;
         return container;
     }
@@ -26,12 +26,12 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
     public async Task<IContainer> StartMongoContainerAsync()
     {
         var container = new ContainerBuilder()
-            .WithImage("mongo")
+            .WithImage("mongo:latest")
             .WithPortBinding(27017, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(false);
         _containers["mongo"] = container;
         return container;
     }
@@ -43,7 +43,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 
         var likeServiceContainer = new ContainerBuilder()
-            .WithImage("rubyfeller/likeservice")
+            .WithImage("rubyfeller/likeservice:latest")
             .WithPortBinding(8081, true)
             .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString",
                 $"mongodb://host.docker.internal:{mongoPort}")
@@ -54,7 +54,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await likeServiceContainer.StartAsync();
+        await likeServiceContainer.StartAsync().ConfigureAwait(false);
         _containers["likeservice"] = likeServiceContainer;
         return likeServiceContainer;
     }
@@ -62,7 +62,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
     public async Task<IContainer> StartPostgresContainerAsync()
     {
         var container = new ContainerBuilder()
-            .WithImage("postgres")
+            .WithImage("postgres:latest")
             .WithEnvironment("POSTGRES_USER", "postgres")
             .WithEnvironment("POSTGRES_PASSWORD", "postgres")
             .WithEnvironment("POSTGRES_DB", "postgres")
@@ -72,7 +72,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
                 .UntilMessageIsLogged("database system is ready to accept connections"))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(false);
         _containers["postgres"] = container;
         return container;
     }
@@ -84,7 +84,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 
         var postServiceContainer = new ContainerBuilder()
-            .WithImage("rubyfeller/postservice")
+            .WithImage("rubyfeller/postservice:latest")
             .WithPortBinding(8080, true)
             .WithEnvironment("ConnectionStrings__DefaultConnection",
                 $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
@@ -94,7 +94,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await postServiceContainer.StartAsync();
+        await postServiceContainer.StartAsync().ConfigureAwait(false);
         return postServiceContainer;
     }
 
@@ -108,7 +108,6 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
 
     public void Dispose()
     {
-        StopContainersAsync().Wait();
-        GC.SuppressFinalize(this);
+        StopContainersAsync().GetAwaiter().GetResult();
     }
 }

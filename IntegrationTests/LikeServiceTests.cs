@@ -13,6 +13,31 @@ public class LikeServiceTests
     {
         _likeFixture = likeFixture;
     }
+    
+    // Test MongoDB
+    [Fact]
+    public async Task Start_MongoDB()
+    {
+        // Arrange
+        var mongoContainer = await _likeFixture.StartMongoContainerAsync();
+        
+        // Assert
+        Assert.NotNull(mongoContainer);
+    }
+
+    [Fact]
+    public async Task Start_LikeService()
+    {
+        // Arrange
+        var mongoContainer = await _likeFixture.StartMongoContainerAsync();
+        var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
+        
+        // Act
+        var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
+        
+        // Assert
+        Assert.NotNull(likeServiceContainer);
+    }
 
     [Fact]
     public async Task Can_Call_Get_Likes_Endpoint()
@@ -20,7 +45,6 @@ public class LikeServiceTests
         // Arrange
         var mongoContainer = await _likeFixture.StartMongoContainerAsync();
         var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
-        await Task.Delay(10000);
         var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
 
 
@@ -86,8 +110,6 @@ public class LikeServiceTests
                 postServiceContainer.GetMappedPublicPort(8080),
                 "api/posts/1"
             ).Uri;
-
-        await Task.Delay(1);
         
         var postResponse = await httpClient.GetStringAsync(getUri);
         var postResponseObject = JsonConvert.DeserializeObject<PostResponse>(postResponse);
