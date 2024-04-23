@@ -20,6 +20,7 @@ public class LikeServiceTests
         // Arrange
         var mongoContainer = await _likeFixture.StartMongoContainerAsync();
         var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
+        await Task.Delay(10000);
         var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
 
 
@@ -86,6 +87,8 @@ public class LikeServiceTests
                 "api/posts/1"
             ).Uri;
 
+        await Task.Delay(1);
+        
         var postResponse = await httpClient.GetStringAsync(getUri);
         var postResponseObject = JsonConvert.DeserializeObject<PostResponse>(postResponse);
         if (postResponseObject != null)
