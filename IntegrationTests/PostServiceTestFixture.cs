@@ -54,6 +54,8 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
                 $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
+            .WithWaitStrategy(Wait.ForUnixContainer()
+                .UntilMessageIsLogged("Application started."))
             .DependsOn(postgresContainer)
             .DependsOn(rabbitmqContainer)
             .Build();

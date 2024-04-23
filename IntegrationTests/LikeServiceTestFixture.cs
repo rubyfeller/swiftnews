@@ -18,7 +18,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
             .Build();
 
-        await container.StartAsync().ConfigureAwait(false);
+        await container.StartAsync();
         _containers["rabbitmq"] = container;
         return container;
     }
@@ -31,7 +31,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
             .Build();
 
-        await container.StartAsync().ConfigureAwait(false);
+        await container.StartAsync();
         _containers["mongo"] = container;
         return container;
     }
@@ -50,11 +50,13 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithEnvironment("RabbitMQHost", "host.docker.internal")
             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
+            .WithWaitStrategy(Wait.ForUnixContainer()
+                .UntilMessageIsLogged("Application started."))
             .DependsOn(mongoContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await likeServiceContainer.StartAsync().ConfigureAwait(false);
+        await likeServiceContainer.StartAsync();
         _containers["likeservice"] = likeServiceContainer;
         return likeServiceContainer;
     }
@@ -72,7 +74,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
                 .UntilMessageIsLogged("database system is ready to accept connections"))
             .Build();
 
-        await container.StartAsync().ConfigureAwait(false);
+        await container.StartAsync();
         _containers["postgres"] = container;
         return container;
     }
@@ -90,11 +92,13 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
                 $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
+            .WithWaitStrategy(Wait.ForUnixContainer() 
+                .UntilMessageIsLogged("Application started."))
             .DependsOn(postgresContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await postServiceContainer.StartAsync().ConfigureAwait(false);
+        await postServiceContainer.StartAsync();
         return postServiceContainer;
     }
 

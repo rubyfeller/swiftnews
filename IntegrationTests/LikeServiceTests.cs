@@ -13,31 +13,6 @@ public class LikeServiceTests
     {
         _likeFixture = likeFixture;
     }
-    
-    // Test MongoDB
-    [Fact]
-    public async Task Start_MongoDB()
-    {
-        // Arrange
-        var mongoContainer = await _likeFixture.StartMongoContainerAsync();
-        
-        // Assert
-        Assert.NotNull(mongoContainer);
-    }
-
-    [Fact]
-    public async Task Start_LikeService()
-    {
-        // Arrange
-        var mongoContainer = await _likeFixture.StartMongoContainerAsync();
-        var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
-        
-        // Act
-        var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
-        
-        // Assert
-        Assert.NotNull(likeServiceContainer);
-    }
 
     [Fact]
     public async Task Can_Call_Get_Likes_Endpoint()
