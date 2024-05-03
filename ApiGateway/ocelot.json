@@ -1,0 +1,72 @@
+{
+    "Routes": [
+        {
+            "DownstreamPathTemplate": "/api/l/likes/{id}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "likes-clusterip-srv",
+                    "Port": 80
+                }
+            ],
+            "UpstreamPathTemplate": "/api/l/likes/{id}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
+            ],
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "Auth0",
+                "AllowedScopes": [
+                    "read:likes",
+                    "write:likes"
+                ]
+            },
+            "FileCacheOptions": {
+                "TtlSeconds": 30,
+                "Region": "europe-north"
+            },
+            "RateLimitOptions": {
+                "ClientWhitelist": [],
+                "EnableRateLimiting": true,
+                "Period": "5s",
+                "PeriodTimespan": 1,
+                "Limit": 1,
+                "HttpStatusCode": 429
+            }
+        },
+        {
+            "DownstreamPathTemplate": "/api/posts",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "posts-clusterip-srv",
+                    "Port": 80
+                }
+            ],
+            "UpstreamPathTemplate": "/api/posts",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
+            ],
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "Auth0",
+                "AllowedScopes": [
+                    "read:posts",
+                    "write:posts"
+                ]
+            }
+        }
+    ],
+    "GlobalConfiguration": {
+        "BaseUrl": "",
+        "ServiceDiscoveryProvider": {
+            "Type": "Kubernetes",
+            "Host": "https://kubernetes.default.svc",
+            "Namespace": "default"
+        }
+    }
+}
