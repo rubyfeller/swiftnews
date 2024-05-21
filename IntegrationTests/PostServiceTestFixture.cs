@@ -1,3 +1,4 @@
+using Docker.DotNet.Models;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using IntegrationTests.Helpers;
@@ -20,7 +21,7 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
     {
         var container = new ContainerBuilder()
             .WithImage("postgres:latest")
-            .WithExtraHost("host.docker.internal", "host-gateway")
+            .WithNetwork("bridge")
             .WithEnvironment("POSTGRES_USER", "postgres")
             .WithEnvironment("POSTGRES_PASSWORD", "postgres")
             .WithEnvironment("POSTGRES_DB", "postgres")
@@ -39,7 +40,7 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
     {
         var container = new ContainerBuilder()
             .WithImage("rabbitmq:3-management")
-            .WithExtraHost("host.docker.internal", "host-gateway")
+            .WithNetwork("bridge")
             .WithPortBinding(5672, true)
             .WithPortBinding(15672, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
@@ -58,7 +59,7 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
 
         var container = new ContainerBuilder()
             .WithImage("rubyfeller/postservice:latest")
-            .WithExtraHost("host.docker.internal", "host-gateway")
+            .WithNetwork("bridge")
             .WithPortBinding(8080, true)
             .WithEnvironment("ConnectionStrings__PostsConn",
                 $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
