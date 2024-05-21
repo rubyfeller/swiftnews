@@ -1,7 +1,7 @@
 {
     "Routes": [
         {
-            "DownstreamPathTemplate": "/api/l/likes/{id}",
+            "DownstreamPathTemplate": "/api/l/likes/{everything}",
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
@@ -9,23 +9,19 @@
                     "Port": 80
                 }
             ],
-            "UpstreamPathTemplate": "/api/l/likes/{id}",
+            "UpstreamPathTemplate": "/api/l/likes/{everything}",
             "UpstreamHttpMethod": [
                 "GET",
                 "POST",
                 "PUT",
-                "DELETE"
+                "DELETE",
+                "OPTIONS"
             ],
             "AuthenticationOptions": {
-                "AuthenticationProviderKey": "Auth0",
-                "AllowedScopes": [
-                    "read:likes",
-                    "write:likes"
-                ]
+                "AuthenticationProviderKey": "Auth0"
             },
-            "FileCacheOptions": {
-                "TtlSeconds": 30,
-                "Region": "europe-north"
+            "AddHeadersToRequest": {
+                "sub": "${Authorization}"
             },
             "RateLimitOptions": {
                 "ClientWhitelist": [],
@@ -37,7 +33,7 @@
             }
         },
         {
-            "DownstreamPathTemplate": "/api/posts",
+            "DownstreamPathTemplate": "/api/posts/{everything}",
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
@@ -45,19 +41,43 @@
                     "Port": 80
                 }
             ],
-            "UpstreamPathTemplate": "/api/posts",
+            "UpstreamPathTemplate": "/api/posts/{everything}",
             "UpstreamHttpMethod": [
                 "GET",
                 "POST",
                 "PUT",
-                "DELETE"
+                "DELETE",
+                "OPTIONS"
             ],
             "AuthenticationOptions": {
-                "AuthenticationProviderKey": "Auth0",
-                "AllowedScopes": [
-                    "read:posts",
-                    "write:posts"
-                ]
+                "AuthenticationProviderKey": "Auth0"
+            },
+            "AddHeadersToRequest": {
+                "sub": "${Authorization}"
+            }
+        },
+        {
+            "DownstreamPathTemplate": "/api/user/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "users-clusterip-srv",
+                    "Port": 80
+                }
+            ],
+            "UpstreamPathTemplate": "/api/user/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            ],
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "Auth0"
+            },
+            "AddHeadersToRequest": {
+                "sub": "${Authorization}"
             }
         }
     ],
@@ -67,6 +87,22 @@
             "Type": "Kubernetes",
             "Host": "https://kubernetes.default.svc",
             "Namespace": "default"
+        },
+        "CorsOptions": {
+            "AllowedOrigins": [
+                "http://localhost:3000"
+            ],
+            "AllowedHeaders": [
+                "*"
+            ],
+            "AllowedMethods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            ],
+            "AllowCredentials": true
         }
     }
 }

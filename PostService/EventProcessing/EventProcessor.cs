@@ -33,4 +33,19 @@ public class EventProcessor : IEventProcessor
 
         return Task.CompletedTask;
     }
+
+    public Task RemoveUserPosts(string message) {
+
+        var userId = message;
+
+        var posts = _postRepo.GetAllPosts().Where(p => p.UserId == userId);
+
+        foreach (var post in posts)
+        {
+            Console.WriteLine(post.Content);
+            _postRepo.RemovePost(post);
+        }
+
+        return Task.CompletedTask;
+    }
 }

@@ -2,9 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: posts-depl
-  namespace: ingress-nginx
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: postservice
@@ -15,12 +13,21 @@ spec:
     spec:
       containers:
       - name: postservice
-        image: rubyfeller/postservice:latest
+        image: k3d-ruby:5000/postservice:v0.29
+        resources:
+          limits:
+            cpu: "1000m"
+          requests:
+            cpu: "300m"
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: posts-clusterip-srv
+  labels:
+    job: postservice
+    app: postservice
 spec:
   type: ClusterIP
   selector:
@@ -30,3 +37,21 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 8080
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: posts-monitor
+  labels:
+    release: prometheus
+    app: prometheus
+spec:
+  jobLabel: job
+  endpoints:
+  - interval: 30s
+    port: postservice
+    path: /metrics
+  selector:
+    matchLabels:
+      app: postservice

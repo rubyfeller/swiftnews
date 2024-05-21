@@ -1,0 +1,41 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: posts-keda-scaledobject
+spec:
+  scaleTargetRef:
+    apiVersion:    apps/v1
+    kind:          Deployment
+    name:          posts-depl
+  pollingInterval:  10
+  cooldownPeriod:   300
+  minReplicaCount:  1
+  maxReplicaCount:  3
+  fallback:
+    failureThreshold: 3
+    replicas: 1
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 150
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://10.43.12.34:9090
+        metricName: dotnet_request_duration_seconds
+        query: sum(rate(dotnet_request_duration_seconds_sum{service="posts-clusterip-srv"}[1m]))
+        threshold: '1'
+        ignoreNullValues: "true"
+
+    - type: prometheus
+      metadata:
+        serverAddress: http://10.43.12.34:9090
+        metricName: dotnet_requests_total
+        query: sum(rate(dotnet_requests_total[1m]))
+        threshold: '100'
+        ignoreNullValues: "true"

@@ -2,12 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PostService.Dtos;
 
-public class PostCreateDTO {
+public class PostCreateDTO
+{
     [Required]
     [MinLength(5)]
     [MaxLength(280)]
     public required string Content { get; set; }
     public DateTime CreatedAt { get; set; }
-    [Required]
-    public required string Author { get; set; }
 }

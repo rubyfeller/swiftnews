@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: likes-depl
-  namespace: ingress-nginx
 spec:
   replicas: 1
   selector:
@@ -15,7 +14,7 @@ spec:
     spec:
       containers:
       - name: likeservice
-        image: rubyfeller/likeservice:latest
+        image: k3d-ruby:5000/likeservice:v0.7
         env:
         - name: USER_NAME
           valueFrom:
@@ -45,4 +44,4 @@ spec:
     - name: likeservice
       protocol: TCP
       port: 80
-      targetPort: 8080
+      targetPort: 8081

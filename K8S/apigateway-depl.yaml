@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: apigateway
-        image: k3d-ruby:5000/apigateway:v0.17
+        image: k3d-ruby:5000/apigateway:v0.36
         resources:
           limits:
             cpu: "500m"

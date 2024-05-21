@@ -1,0 +1,33 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: keda-scaledobject-postgres
+spec:
+  scaleTargetRef:
+    apiVersion:    apps/v1
+    kind:          StatefulSet
+    name:          postgres
+  pollingInterval:  10
+  cooldownPeriod:   300
+  minReplicaCount:  1
+  maxReplicaCount:  5
+  fallback:
+    failureThreshold: 3
+    replicas: 1
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 150
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://10.43.12.34:9090
+        metricName: postgres_query_duration_seconds
+        query: sum(rate(pg_stat_activity{service="postgres"}[1m]))
+        threshold: '1'
+        ignoreNullValues: "true"

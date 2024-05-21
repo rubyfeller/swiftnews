@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
 
 var baseAuthenticationProviderKey = "Auth0";
 string authority = $"https://{builder.Configuration["Auth0:Domain"]}/";
@@ -24,7 +25,6 @@ builder.Services.AddAuthentication(options =>
         {
             options.Authority = authority;
             options.Audience = audience;
-
         });
 
 builder.Configuration.SetBasePath(builder.Environment.ContentRootPath).AddJsonFile("ocelot.json", optional: false, reloadOnChange: true).AddEnvironmentVariables();

@@ -5,5 +5,5 @@ public class PostReadDTO {
     public required string Content { get; set; }
     public int LikeCount { get; set; }
     public DateTime CreatedAt { get; set; }
-    public required string Author { get; set; }
+    public required string UserId { get; set; }
 }

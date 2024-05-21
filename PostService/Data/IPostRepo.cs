@@ -11,4 +11,5 @@ public interface IPostRepo
     void CreatePost(Post post);
     void LikePost(int postId);
     void RemoveLike(int postId);
+    void RemovePost(Post post);
 }

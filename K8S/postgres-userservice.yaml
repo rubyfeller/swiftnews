@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-userservice
+spec:
+  serviceName: postgres-userservice
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-userservice
+  template:
+    metadata:
+      labels:
+        app: postgres-userservice
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: userdb
+            - name: POSTGRES_USER
+              value: user
+            - name: POSTGRES_PASSWORD
+              value: password
+          volumeMounts:
+            - mountPath: "/var/lib/postgresql/data"
+              name: "postgres-pv-storage"
+              subPath: data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-pv-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 500Mi
+        storageClassName: "local-path"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-userservice-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-userservice
+  ports:
+    - name: postgres
+      protocol: TCP
+      port: 5432
+      targetPort: 5432

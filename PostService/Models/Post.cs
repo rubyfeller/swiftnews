@@ -17,6 +17,8 @@ public class Post
     public int LikeCount { get; set; }
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
-    [Column("author")]
-    public string Author { get; set; }
+
+    [Column("user_id")]
+    public string UserId { get; set; }
+
 }

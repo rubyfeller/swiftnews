@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "rubyfeller",
+        "projectKey": "rubyfeller_swiftnews_postservice"
+    }
+}

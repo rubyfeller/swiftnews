@@ -34,7 +34,7 @@ public class PostRepo : IPostRepo
     public void LikePost(int postId)
     {
         var post = GetPostById(postId);
-        
+
         if (post != null)
         {
             post.LikeCount++;
@@ -61,6 +61,13 @@ public class PostRepo : IPostRepo
         {
             Console.WriteLine("Post with id: " + postId + " not found");
         }
+    }
+
+    public void RemovePost(Post post)
+    {
+        ArgumentNullException.ThrowIfNull(post);
+
+        _context.Posts.Remove(post);
     }
 
     public bool SaveChanges()

@@ -31,11 +31,6 @@ namespace PostService.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Author")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("author");
-
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text")
@@ -48,6 +43,11 @@ namespace PostService.Migrations
                     b.Property<int>("LikeCount")
                         .HasColumnType("integer")
                         .HasColumnName("like_count");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id");
 

@@ -1,104 +1,218 @@
+using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostService.Data;
 using PostService.Dtos;
 using PostService.Models;
+using Prometheus;
 
-namespace PostService.Controllers;
-
-[ApiController]
-[Route("/api/posts")]
-public class PostController : ControllerBase
+namespace PostService.Controllers
 {
-    private readonly PostContext _context;
-    private readonly IMapper _mapper;
-    private readonly IPostRepo _repository;
-
-    public PostController(PostContext context, IMapper mapper, IPostRepo repository)
+    [ApiController]
+    [Route("/api/posts")]
+    public class PostController : ControllerBase
     {
-        _context = context;
-        _mapper = mapper;
-        _repository = repository;
-    }
+        private readonly PostContext _context;
+        private readonly IMapper _mapper;
+        private readonly IPostRepo _repository;
 
-    [HttpGet]
-    public ActionResult<IEnumerable<PostReadDTO>> GetAll()
-    {
-        var posts = _repository.GetAllPosts();
-        return Ok(_mapper.Map<IEnumerable<PostReadDTO>>(posts));
-    }
+        private static readonly Counter RequestsCounter = Metrics.CreateCounter("dotnet_requests_total", "Total number of requests to the web API");
 
-    [HttpGet("{id}")]
-    public ActionResult<PostReadDTO> GetById(int id)
-    {
-        var post = _repository.GetPostById(id);
-        if (post == null)
+        public PostController(PostContext context, IMapper mapper, IPostRepo repository)
         {
-            return NotFound();
+            _context = context;
+            _mapper = mapper;
+            _repository = repository;
         }
-        return Ok(_mapper.Map<PostReadDTO>(post));
-    }
 
-    [HttpPost]
-    public ActionResult<PostReadDTO> Create(PostCreateDTO postCreateDTO)
-    {
-        var post = _mapper.Map<Post>(postCreateDTO);
-
-        _repository.CreatePost(post);
-        _repository.SaveChanges();
-
-        return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Post post)
-    {
-        if (id != post.Id)
+        private void ObserveRequestDuration(double duration)
         {
-            return BadRequest();
+            var histogram = Metrics.CreateHistogram(
+                "dotnet_request_duration_seconds",
+                "Histogram for the duration in seconds.",
+                new HistogramConfiguration
+                {
+                    Buckets = Histogram.LinearBuckets(start: 1, width: 1, count: 5)
+                });
+
+            histogram.Observe(duration);
         }
-        _context.Entry(post).State = EntityState.Modified;
-        try
+
+        [HttpGet]
+        public ActionResult<IEnumerable<PostReadDTO>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            await _context.SaveChangesAsync();
+            RequestsCounter.Inc();
+
+            var sw = Stopwatch.StartNew();
+
+            var posts = _repository.GetAllPosts()
+                                   .Skip((page - 1) * pageSize)
+                                   .Take(pageSize)
+                                   .ToList();
+
+            sw.Stop();
+
+            ObserveRequestDuration(sw.Elapsed.TotalSeconds);
+
+            return Ok(_mapper.Map<IEnumerable<PostReadDTO>>(posts));
         }
-        catch (DbUpdateConcurrencyException)
+
+        [HttpGet("{id}")]
+        public ActionResult<PostReadDTO> GetById(int id)
         {
-            if (!PostExists(id))
+            RequestsCounter.Inc();
+
+            var sw = Stopwatch.StartNew();
+
+            var post = _repository.GetPostById(id);
+            if (post == null)
             {
+                sw.Stop();
                 return NotFound();
+            }
+
+            sw.Stop();
+            ObserveRequestDuration(sw.Elapsed.TotalSeconds);
+
+            return Ok(_mapper.Map<PostReadDTO>(post));
+        }
+
+        [HttpPost]
+        public ActionResult<PostReadDTO> Create(PostCreateDTO postCreateDTO)
+        {
+            RequestsCounter.Inc();
+
+            var sw = Stopwatch.StartNew();
+
+            var authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
+
+            if (authorizationHeader != null && authorizationHeader.StartsWith("Bearer "))
+            {
+                var token = authorizationHeader.Substring("Bearer ".Length).Trim();
+
+                try
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+                    var sub = jsonToken?.Subject;
+
+                    if (sub == null)
+                    {
+                        return Unauthorized();
+                    }
+
+                    var post = _mapper.Map<Post>(postCreateDTO);
+
+                    post.UserId = sub;
+
+                    _repository.CreatePost(post);
+                    _repository.SaveChanges();
+
+                    sw.Stop();
+
+                    ObserveRequestDuration(sw.Elapsed.TotalSeconds);
+
+                    return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error decoding token: " + ex.Message);
+                    return BadRequest("Invalid token");
+                }
             }
             else
             {
-                throw;
+                return Unauthorized();
             }
         }
-        return NoContent();
-    }
 
-    private bool PostExists(int id)
-    {
-        return _context.Posts.Any(e => e.Id == id);
-    }
-
-    [HttpGet("{id}/exists")]
-    public ActionResult<bool> Exists(int id)
-    {
-        var postExists = PostExists(id);
-        return Ok(postExists);
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var post = await _context.Posts.FindAsync(id);
-        if (post == null)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, Post post)
         {
-            return NotFound();
+            RequestsCounter.Inc();
+
+            var sw = Stopwatch.StartNew();
+
+            if (id != post.Id)
+            {
+                sw.Stop();
+                return BadRequest();
+            }
+
+            _context.Entry(post).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PostExists(id))
+                {
+                    sw.Stop();
+                    return NotFound();
+                }
+                else
+                {
+                    sw.Stop();
+                    throw;
+                }
+            }
+
+            sw.Stop();
+
+            ObserveRequestDuration(sw.Elapsed.TotalSeconds);
+
+            return NoContent();
         }
-        _context.Posts.Remove(post);
-        await _context.SaveChangesAsync();
-        return NoContent();
+
+        private bool PostExists(int id)
+        {
+            RequestsCounter.Inc();
+
+            return _context.Posts.Any(e => e.Id == id);
+        }
+
+        [HttpGet("{id}/exists")]
+        public ActionResult<bool> Exists(int id)
+        {
+            RequestsCounter.Inc();
+
+            var sw = Stopwatch.StartNew();
+
+            var postExists = PostExists(id);
+
+            sw.Stop();
+
+            ObserveRequestDuration(sw.Elapsed.TotalSeconds);
+
+            return Ok(postExists);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            RequestsCounter.Inc();
+
+            var sw = Stopwatch.StartNew();
+
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
+            {
+                sw.Stop();
+                return NotFound();
+            }
+
+            _context.Posts.Remove(post);
+            await _context.SaveChangesAsync();
+
+            sw.Stop();
+
+            ObserveRequestDuration(sw.Elapsed.TotalSeconds);
+
+            return NoContent();
+        }
     }
 }
