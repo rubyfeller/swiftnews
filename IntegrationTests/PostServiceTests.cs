@@ -92,7 +92,7 @@ public class PostServiceTests
             "api/posts"
         ).Uri;
 
-        var token = await _auth0Helper.GetAuth0TokenAsync();
+                var token = await _auth0Helper.GetAuth0TokenAsync();
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var testPost = new { content = "Post integration test", author = "Test person" };

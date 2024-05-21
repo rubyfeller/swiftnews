@@ -59,13 +59,16 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
-
+  
       - name: Check Docker version
         run: docker --version
-
+  
       - name: Restore dependencies for Integration Tests
         run: dotnet restore ./IntegrationTests
       - name: Build Integration Tests
         run: dotnet build ./IntegrationTests --no-restore
-      - name: Run Integration Tests
-        run: dotnet test ./IntegrationTests --no-build --verbosity detailed
+      - name: Run Integration Tests and print container logs
+        run: |
+          dotnet test ./IntegrationTests --no-build --verbosity detailed
+          docker logs <container_id_or_name>
+  

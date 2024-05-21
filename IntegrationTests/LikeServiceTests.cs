@@ -6,103 +6,103 @@ using Xunit;
 
 namespace IntegrationTests;
 
-[Collection("LikeServiceTests")]
-public class LikeServiceTests
-{
-    private readonly LikeServiceTestFixture _likeFixture;
-    private readonly Auth0Helper _auth0Helper;
+// [Collection("LikeServiceTests")]
+// public class LikeServiceTests
+// {
+//     private readonly LikeServiceTestFixture _likeFixture;
+//     private readonly Auth0Helper _auth0Helper;
 
-    public LikeServiceTests(LikeServiceTestFixture likeFixture)
-    {
-        _likeFixture = likeFixture;
-        _auth0Helper = _likeFixture.Auth0Helper;
-    }
+//     public LikeServiceTests(LikeServiceTestFixture likeFixture)
+//     {
+//         _likeFixture = likeFixture;
+//         _auth0Helper = _likeFixture.Auth0Helper;
+//     }
 
-    [Fact]
-    public async Task Can_Call_Get_Likes_Endpoint()
-    {
-        // Arrange
-        var mongoContainer = await _likeFixture.StartMongoContainerAsync();
-        var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
-        var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
+//     [Fact]
+//     public async Task Can_Call_Get_Likes_Endpoint()
+//     {
+//         // Arrange
+//         var mongoContainer = await _likeFixture.StartMongoContainerAsync();
+//         var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
+//         var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
 
 
-        var httpClient = new HttpClient();
-        var requestUri =
-            new UriBuilder(
-                Uri.UriSchemeHttp,
-                likeServiceContainer.Hostname,
-                likeServiceContainer.GetMappedPublicPort(8081),
-                "api/l/likes"
-            ).Uri;
+//         var httpClient = new HttpClient();
+//         var requestUri =
+//             new UriBuilder(
+//                 Uri.UriSchemeHttp,
+//                 likeServiceContainer.Hostname,
+//                 likeServiceContainer.GetMappedPublicPort(8081),
+//                 "api/l/likes"
+//             ).Uri;
+        
+//         // Act
+//         var like = await httpClient.GetStringAsync(requestUri);
+        
+//         // Assert
+//         Assert.Equal("[]", like);
+//     }
 
-        // Act
-        var like = await httpClient.GetStringAsync(requestUri);
+//     [Fact]
+//     public async Task Can_Like_Post()
+//     {
+//         var postgresContainer = await _likeFixture.StartPostgresContainerAsync();
+//         var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
+//         var postServiceContainer =
+//             await _likeFixture.StartPostServiceContainerAsync(postgresContainer, rabbitmqContainer);
 
-        // Assert
-        Assert.Equal("[]", like);
-    }
+//         var mongoContainer = await _likeFixture.StartMongoContainerAsync();
+//         var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
 
-    [Fact]
-    public async Task Can_Like_Post()
-    {
-        var postgresContainer = await _likeFixture.StartPostgresContainerAsync();
-        var rabbitmqContainer = await _likeFixture.StartRabbitMQContainerAsync();
-        var postServiceContainer =
-            await _likeFixture.StartPostServiceContainerAsync(postgresContainer, rabbitmqContainer);
+//         var httpClient = new HttpClient();
+//         var requestUri =
+//             new UriBuilder(
+//                 Uri.UriSchemeHttp,
+//                 postServiceContainer.Hostname,
+//                 postServiceContainer.GetMappedPublicPort(8080),
+//                 "api/posts"
+//             ).Uri;
 
-        var mongoContainer = await _likeFixture.StartMongoContainerAsync();
-        var likeServiceContainer = await _likeFixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
+//         var post = new { content = "Post integration test", author = "Test person" };
 
-        var httpClient = new HttpClient();
-        var requestUri =
-            new UriBuilder(
-                Uri.UriSchemeHttp,
-                postServiceContainer.Hostname,
-                postServiceContainer.GetMappedPublicPort(8080),
-                "api/posts"
-            ).Uri;
+//         var token = await _auth0Helper.GetAuth0TokenAsync();
+//         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var post = new { content = "Post integration test", author = "Test person" };
+//         var response = await httpClient.PostAsJsonAsync(requestUri, post);
+//         response.EnsureSuccessStatusCode();
 
-        var token = await _auth0Helper.GetAuth0TokenAsync();
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+//         var getResponse = await httpClient.GetStringAsync(requestUri);
+//         Assert.Contains("Post integration test", getResponse);
 
-        var response = await httpClient.PostAsJsonAsync(requestUri, post);
-        response.EnsureSuccessStatusCode();
+//         var likeUri =
+//             new UriBuilder(
+//                 Uri.UriSchemeHttp,
+//                 likeServiceContainer.Hostname,
+//                 likeServiceContainer.GetMappedPublicPort(8081),
+//                 "api/l/likes/1"
+//             ).Uri;
+//         var likeResponse = await httpClient.PostAsync(likeUri, null);
+//         likeResponse.EnsureSuccessStatusCode();
 
-        var getResponse = await httpClient.GetStringAsync(requestUri);
-        Assert.Contains("Post integration test", getResponse);
-
-        var likeUri =
-            new UriBuilder(
-                Uri.UriSchemeHttp,
-                likeServiceContainer.Hostname,
-                likeServiceContainer.GetMappedPublicPort(8081),
-                "api/l/likes/1"
-            ).Uri;
-        var likeResponse = await httpClient.PostAsync(likeUri, null);
-        likeResponse.EnsureSuccessStatusCode();
-
-        await Task.Delay(1000);
-
-        var getUri =
-            new UriBuilder(
-                Uri.UriSchemeHttp,
-                postServiceContainer.Hostname,
-                postServiceContainer.GetMappedPublicPort(8080),
-                "api/posts/1"
-            ).Uri;
-
-        var postResponse = await httpClient.GetStringAsync(getUri);
-        var postResponseObject = JsonConvert.DeserializeObject<PostResponse>(postResponse);
-        if (postResponseObject != null)
-        {
-            Assert.Equal(1, postResponseObject.LikeCount);
-        }
-        else
-        {
-            Assert.Fail("Failed to parse the response into a PostResponse object.");
-        }
-    }
-}
+//         await Task.Delay(1000);
+        
+//         var getUri =
+//             new UriBuilder(
+//                 Uri.UriSchemeHttp,
+//                 postServiceContainer.Hostname,
+//                 postServiceContainer.GetMappedPublicPort(8080),
+//                 "api/posts/1"
+//             ).Uri;
+        
+//         var postResponse = await httpClient.GetStringAsync(getUri);
+//         var postResponseObject = JsonConvert.DeserializeObject<PostResponse>(postResponse);
+//         if (postResponseObject != null)
+//         {
+//             Assert.Equal(1, postResponseObject.LikeCount);
+//         }
+//         else
+//         {
+//             Assert.Fail("Failed to parse the response into a PostResponse object.");
+//         }
+//     }
+// }

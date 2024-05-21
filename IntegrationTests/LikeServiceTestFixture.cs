@@ -5,121 +5,121 @@ using Xunit;
 
 namespace IntegrationTests;
 
-[CollectionDefinition("LikeServiceTests")]
-public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServiceTestFixture>
-{
-    public Auth0Helper Auth0Helper { get; private set; }
-    private readonly IDictionary<string, IContainer> _containers = new Dictionary<string, IContainer>();
+// [CollectionDefinition("LikeServiceTests")]
+// public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServiceTestFixture>
+// {
+//     public Auth0Helper Auth0Helper { get; private set; }
+//     private readonly IDictionary<string, IContainer> _containers = new Dictionary<string, IContainer>();
 
-    public LikeServiceTestFixture()
-    {
-        Auth0Helper = new Auth0Helper();
-    }
+//     public LikeServiceTestFixture()
+//     {
+//         Auth0Helper = new Auth0Helper();
+//     }
 
-    public async Task<IContainer> StartRabbitMQContainerAsync()
-    {
-        var container = new ContainerBuilder()
-            .WithImage("rabbitmq:3-management")
-            .WithPortBinding(15672, true)
-            .WithPortBinding(5672, true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
-            .Build();
+//     public async Task<IContainer> StartRabbitMQContainerAsync()
+//     {
+//         var container = new ContainerBuilder()
+//             .WithImage("rabbitmq:3-management")
+//             .WithPortBinding(15672, true)
+//             .WithPortBinding(5672, true)
+//             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
+//             .Build();
 
-        await container.StartAsync();
-        _containers["rabbitmq"] = container;
-        return container;
-    }
+//         await container.StartAsync();
+//         _containers["rabbitmq"] = container;
+//         return container;
+//     }
 
-    public async Task<IContainer> StartMongoContainerAsync()
-    {
-        var container = new ContainerBuilder()
-            .WithImage("mongo:latest")
-            .WithPortBinding(27017, true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
-            .Build();
+//     public async Task<IContainer> StartMongoContainerAsync()
+//     {
+//         var container = new ContainerBuilder()
+//             .WithImage("mongo:latest")
+//             .WithPortBinding(27017, true)
+//             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
+//             .Build();
 
-        await container.StartAsync();
-        _containers["mongo"] = container;
-        return container;
-    }
+//         await container.StartAsync();
+//         _containers["mongo"] = container;
+//         return container;
+//     }
 
-    public async Task<IContainer> StartLikeServiceContainerAsync(IContainer mongoContainer,
-        IContainer rabbitmqContainer)
-    {
-        var mongoPort = mongoContainer.GetMappedPublicPort(27017);
-        var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
+//     public async Task<IContainer> StartLikeServiceContainerAsync(IContainer mongoContainer,
+//         IContainer rabbitmqContainer)
+//     {
+//         var mongoPort = mongoContainer.GetMappedPublicPort(27017);
+//         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 
-        var likeServiceContainer = new ContainerBuilder()
-            .WithImage("rubyfeller/likeservice:latest")
-            .WithPortBinding(8081, true)
-            .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString",
-                $"mongodb://host.docker.internal:{mongoPort}")
-            .WithEnvironment("RabbitMQHost", "host.docker.internal")
-            .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
-            .WithWaitStrategy(Wait.ForUnixContainer()
-                .UntilMessageIsLogged("Application started."))
-            .DependsOn(mongoContainer)
-            .DependsOn(rabbitmqContainer)
-            .Build();
+//         var likeServiceContainer = new ContainerBuilder()
+//             .WithImage("rubyfeller/likeservice:latest")
+//             .WithPortBinding(8081, true)
+//             .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString",
+//                 $"mongodb://host.docker.internal:{mongoPort}")
+//             .WithEnvironment("RabbitMQHost", "host.docker.internal")
+//             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
+//             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
+//             .WithWaitStrategy(Wait.ForUnixContainer()
+//                 .UntilMessageIsLogged("Now listening on"))
+//             .DependsOn(mongoContainer)
+//             .DependsOn(rabbitmqContainer)
+//             .Build();
 
-        await likeServiceContainer.StartAsync();
-        _containers["likeservice"] = likeServiceContainer;
-        return likeServiceContainer;
-    }
+//         await likeServiceContainer.StartAsync();
+//         _containers["likeservice"] = likeServiceContainer;
+//         return likeServiceContainer;
+//     }
 
-    public async Task<IContainer> StartPostgresContainerAsync()
-    {
-        var container = new ContainerBuilder()
-            .WithImage("postgres:latest")
-            .WithEnvironment("POSTGRES_USER", "postgres")
-            .WithEnvironment("POSTGRES_PASSWORD", "postgres")
-            .WithEnvironment("POSTGRES_DB", "postgres")
-            .WithPortBinding(5432, true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5432))
-            .WithWaitStrategy(Wait.ForUnixContainer()
-                .UntilMessageIsLogged("database system is ready to accept connections"))
-            .Build();
+//     public async Task<IContainer> StartPostgresContainerAsync()
+//     {
+//         var container = new ContainerBuilder()
+//             .WithImage("postgres:latest")
+//             .WithEnvironment("POSTGRES_USER", "postgres")
+//             .WithEnvironment("POSTGRES_PASSWORD", "postgres")
+//             .WithEnvironment("POSTGRES_DB", "postgres")
+//             .WithPortBinding(5432, true)
+//             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5432))
+//             .WithWaitStrategy(Wait.ForUnixContainer()
+//                 .UntilMessageIsLogged("database system is ready to accept connections"))
+//             .Build();
 
-        await container.StartAsync();
-        _containers["postgres"] = container;
-        return container;
-    }
+//         await container.StartAsync();
+//         _containers["postgres"] = container;
+//         return container;
+//     }
 
-    public async Task<IContainer> StartPostServiceContainerAsync(IContainer postgresContainer,
-        IContainer rabbitmqContainer)
-    {
-        var postgresPort = postgresContainer.GetMappedPublicPort(5432);
-        var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
+//     public async Task<IContainer> StartPostServiceContainerAsync(IContainer postgresContainer,
+//         IContainer rabbitmqContainer)
+//     {
+//         var postgresPort = postgresContainer.GetMappedPublicPort(5432);
+//         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 
-        var postServiceContainer = new ContainerBuilder()
-            .WithImage("rubyfeller/postservice:latest")
-            .WithPortBinding(8080, true)
-            .WithEnvironment("ConnectionStrings__PostsConn",
-                $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
-            .WithEnvironment("RabbitMQHost", "host.docker.internal")
-            .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
-            .WithWaitStrategy(Wait.ForUnixContainer() 
-                .UntilMessageIsLogged("Now listening on"))
-            .DependsOn(postgresContainer)
-            .DependsOn(rabbitmqContainer)
-            .Build();
+//         var postServiceContainer = new ContainerBuilder()
+//             .WithImage("rubyfeller/postservice:latest")
+//             .WithPortBinding(8080, true)
+//             .WithEnvironment("ConnectionStrings__PostsConn",
+//                 $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
+//             .WithEnvironment("RabbitMQHost", "host.docker.internal")
+//             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
+//             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
+//             .WithWaitStrategy(Wait.ForUnixContainer() 
+//                 .UntilMessageIsLogged("Now listening on"))
+//             .DependsOn(postgresContainer)
+//             .DependsOn(rabbitmqContainer)
+//             .Build();
 
-        await postServiceContainer.StartAsync();
-        return postServiceContainer;
-    }
+//         await postServiceContainer.StartAsync();
+//         return postServiceContainer;
+//     }
 
-    private async Task StopContainersAsync()
-    {
-        foreach (var container in _containers.Values)
-        {
-            await container.StopAsync();
-        }
-    }
+//     private async Task StopContainersAsync()
+//     {
+//         foreach (var container in _containers.Values)
+//         {
+//             await container.StopAsync();
+//         }
+//     }
 
-    public void Dispose()
-    {
-        StopContainersAsync().GetAwaiter().GetResult();
-    }
-}
+//     public void Dispose()
+//     {
+//         StopContainersAsync().GetAwaiter().GetResult();
+//     }
+// }

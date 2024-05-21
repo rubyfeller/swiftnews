@@ -12,6 +12,7 @@ services:
       ConnectionStrings__DefaultConnection: "Server=db;Database=postgres;User ID=postgres;Password=postgres"
     depends_on:
       - db
+      - rabbitmq
 
   db:
     container_name: db
@@ -34,13 +35,7 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-    networks:
-      - rabbitmq
     restart: unless-stopped
-
-networks:
-  rabbitmq:
-    driver: bridge
 
 volumes:
   pgdata:
