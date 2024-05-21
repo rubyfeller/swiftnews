@@ -1,4 +1,6 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using IntegrationTests.Helpers;
 using Xunit;
 
 namespace IntegrationTests;
@@ -7,10 +9,12 @@ namespace IntegrationTests;
 public class PostServiceTests
 {
     private readonly PostServiceTestFixture _fixture;
+    private readonly Auth0Helper _auth0Helper;
 
     public PostServiceTests(PostServiceTestFixture fixture)
     {
         _fixture = fixture;
+        _auth0Helper = _fixture.Auth0Helper;
     }
 
     [Fact]
@@ -59,6 +63,9 @@ public class PostServiceTests
 
         var post = new { content = "Post integration test", author = "Test person" };
 
+        var token = await _auth0Helper.GetAuth0TokenAsync();
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
         // Act
         var response = await httpClient.PostAsJsonAsync(requestUri, post);
         response.EnsureSuccessStatusCode();
@@ -84,6 +91,10 @@ public class PostServiceTests
             postsServicePort,
             "api/posts"
         ).Uri;
+
+        var token = await _auth0Helper.GetAuth0TokenAsync();
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
         var testPost = new { content = "Post integration test", author = "Test person" };
         var createResponse = await httpClient.PostAsJsonAsync(createPostUri, testPost);
         createResponse.EnsureSuccessStatusCode();

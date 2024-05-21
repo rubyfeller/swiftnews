@@ -1,4 +1,6 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using IntegrationTests.Helpers;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -8,10 +10,12 @@ namespace IntegrationTests;
 public class LikeServiceTests
 {
     private readonly LikeServiceTestFixture _likeFixture;
+    private readonly Auth0Helper _auth0Helper;
 
     public LikeServiceTests(LikeServiceTestFixture likeFixture)
     {
         _likeFixture = likeFixture;
+        _auth0Helper = _likeFixture.Auth0Helper;
     }
 
     [Fact]
@@ -31,10 +35,10 @@ public class LikeServiceTests
                 likeServiceContainer.GetMappedPublicPort(8081),
                 "api/l/likes"
             ).Uri;
-        
+
         // Act
         var like = await httpClient.GetStringAsync(requestUri);
-        
+
         // Assert
         Assert.Equal("[]", like);
     }
@@ -58,7 +62,11 @@ public class LikeServiceTests
                 postServiceContainer.GetMappedPublicPort(8080),
                 "api/posts"
             ).Uri;
+
         var post = new { content = "Post integration test", author = "Test person" };
+
+        var token = await _auth0Helper.GetAuth0TokenAsync();
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await httpClient.PostAsJsonAsync(requestUri, post);
         response.EnsureSuccessStatusCode();
@@ -77,7 +85,7 @@ public class LikeServiceTests
         likeResponse.EnsureSuccessStatusCode();
 
         await Task.Delay(1000);
-        
+
         var getUri =
             new UriBuilder(
                 Uri.UriSchemeHttp,
@@ -85,7 +93,7 @@ public class LikeServiceTests
                 postServiceContainer.GetMappedPublicPort(8080),
                 "api/posts/1"
             ).Uri;
-        
+
         var postResponse = await httpClient.GetStringAsync(getUri);
         var postResponseObject = JsonConvert.DeserializeObject<PostResponse>(postResponse);
         if (postResponseObject != null)

@@ -1,5 +1,6 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using IntegrationTests.Helpers;
 using Xunit;
 
 namespace IntegrationTests;
@@ -7,7 +8,13 @@ namespace IntegrationTests;
 [CollectionDefinition("LikeServiceTests")]
 public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServiceTestFixture>
 {
+    public Auth0Helper Auth0Helper { get; private set; }
     private readonly IDictionary<string, IContainer> _containers = new Dictionary<string, IContainer>();
+
+    public LikeServiceTestFixture()
+    {
+        Auth0Helper = new Auth0Helper();
+    }
 
     public async Task<IContainer> StartRabbitMQContainerAsync()
     {
@@ -88,12 +95,13 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
         var postServiceContainer = new ContainerBuilder()
             .WithImage("rubyfeller/postservice:latest")
             .WithPortBinding(8080, true)
-            .WithEnvironment("ConnectionStrings__DefaultConnection",
+            .WithEnvironment("ConnectionStrings__PostsConn",
                 $"Server=host.docker.internal;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
+            .WithEnvironment("RabbitMQHost", "host.docker.internal")
             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
             .WithWaitStrategy(Wait.ForUnixContainer() 
-                .UntilMessageIsLogged("Application started."))
+                .UntilMessageIsLogged("Now listening on"))
             .DependsOn(postgresContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
