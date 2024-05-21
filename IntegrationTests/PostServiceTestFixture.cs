@@ -62,7 +62,6 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
             .WithEnvironment("RabbitMQHost", "host.docker.internal")
             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
             .DependsOn(postgresContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
