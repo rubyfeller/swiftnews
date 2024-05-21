@@ -54,7 +54,7 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
         var postgresPort = postgresContainer.GetMappedPublicPort(5432);
         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
 
-        var postServiceContainer = new ContainerBuilder()
+        var container = new ContainerBuilder()
             .WithImage("rubyfeller/postservice:latest")
             .WithPortBinding(8080, true)
             .WithEnvironment("ConnectionStrings__PostsConn",
@@ -67,8 +67,9 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await postServiceContainer.StartAsync();
-        return postServiceContainer;
+        await container.StartAsync();
+        _containers["postservice"] = container;
+        return container;
     }
 
     private async Task StopContainersAsync()
