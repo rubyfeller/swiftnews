@@ -54,15 +54,16 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
     {
         var postgresPort = postgresContainer.GetMappedPublicPort(5432);
         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
-        var postgresName = postgresContainer.IpAddress;
-        var rabbitmqName = rabbitmqContainer.IpAddress;
+
+        var postgresHost = postgresContainer.Hostname;
+        var rabbitmqHost = rabbitmqContainer.Hostname;
 
         var container = new ContainerBuilder()
             .WithImage("rubyfeller/postservice:latest")
             .WithPortBinding(8080, true)
             .WithEnvironment("ConnectionStrings__PostsConn",
-                $"Server={postgresName};Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
-            .WithEnvironment("RabbitMQHost", rabbitmqName)
+                $"Server={postgresHost};Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
+            .WithEnvironment("RabbitMQHost", rabbitmqHost)
             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
