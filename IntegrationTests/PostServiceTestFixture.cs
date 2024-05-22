@@ -21,6 +21,7 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
     {
         var container = new ContainerBuilder()
             .WithImage("postgres:latest")
+            .WithNetwork("bridge")
             .WithEnvironment("POSTGRES_USER", "postgres")
             .WithEnvironment("POSTGRES_PASSWORD", "postgres")
             .WithEnvironment("POSTGRES_DB", "postgres")
@@ -39,6 +40,7 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
     {
         var container = new ContainerBuilder()
             .WithImage("rabbitmq:3-management")
+            .WithNetwork("bridge")
             .WithPortBinding(5672, true)
             .WithPortBinding(15672, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
