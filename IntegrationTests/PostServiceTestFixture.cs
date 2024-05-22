@@ -21,7 +21,6 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
     {
         var container = new ContainerBuilder()
             .WithImage("postgres:latest")
-            .WithNetwork("bridge")
             .WithEnvironment("POSTGRES_USER", "postgres")
             .WithEnvironment("POSTGRES_PASSWORD", "postgres")
             .WithEnvironment("POSTGRES_DB", "postgres")
@@ -40,7 +39,6 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
     {
         var container = new ContainerBuilder()
             .WithImage("rabbitmq:3-management")
-            .WithNetwork("bridge")
             .WithPortBinding(5672, true)
             .WithPortBinding(15672, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
@@ -59,11 +57,10 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
 
         var container = new ContainerBuilder()
             .WithImage("rubyfeller/postservice:latest")
-            .WithNetwork("bridge")
             .WithPortBinding(8080, true)
             .WithEnvironment("ConnectionStrings__PostsConn",
-                $"Server=172.17.0.1;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
-            .WithEnvironment("RabbitMQHost", "172.17.0.1")
+                $"Server=localhost;Port={postgresPort};Database=postgres;User Id=postgres;Password=postgres;")
+            .WithEnvironment("RabbitMQHost", "localhost")
             .WithEnvironment("RabbitMQPort", rabbitmqPort.ToString())
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
