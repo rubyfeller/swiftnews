@@ -65,7 +65,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
-            // .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(request => request.ForPath("/")))
             .DependsOn(mongoContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
@@ -108,7 +108,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
-            // .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
             .DependsOn(postgresContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
