@@ -60,7 +60,7 @@ public class MessageExchangeTests
         var mongoContainer = await _fixture.StartMongoContainerAsync();
         var likeServiceContainer = await _fixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
 
-        var factory = new ConnectionFactory() { HostName = "localhost", Port = rabbitmqContainer.GetMappedPublicPort(5672) };
+        var factory = new ConnectionFactory() { HostName = "127.0.0.1", Port = rabbitmqContainer.GetMappedPublicPort(5672) };
         var httpClient = new HttpClient();
 
         // Act
@@ -83,7 +83,7 @@ public class MessageExchangeTests
         channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
 
         var likeServicePort = likeServiceContainer.GetMappedPublicPort(8081);
-        var likeResponse = await httpClient.PostAsync($"http://localhost:{likeServicePort}/api/l/likes/7", null);
+        var likeResponse = await httpClient.PostAsync($"http://127.0.0.1:{likeServicePort}/api/l/likes/7", null);
         likeResponse.EnsureSuccessStatusCode();
 
         if (await Task.WhenAny(tcs.Task, Task.Delay(10000)) == tcs.Task)

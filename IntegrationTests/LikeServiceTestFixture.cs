@@ -91,7 +91,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("database system is ready to accept connections"))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(true);
         _containers["postgres"] = container;
 
         return container;
@@ -114,10 +114,19 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await postServiceContainer.StartAsync();
+        Console.WriteLine("Starting PostServiceContainer");
+
+        await postServiceContainer.StartAsync().ConfigureAwait(true);
         _containers["postservice"] = postServiceContainer;
 
         return postServiceContainer;
+    }
+
+    public async Task PrintContainerLogs(IContainer container, string containerName)
+    {
+        var logs = await container.GetLogsAsync(timestampsEnabled: true).ConfigureAwait(false);
+        Console.WriteLine($"{containerName} logs:");
+        Console.WriteLine(logs);
     }
 
     private async Task StopContainersAsync()
@@ -132,6 +141,11 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
 
     public void Dispose()
     {
+        foreach (var container in _containers.Values)
+        {
+            PrintContainerLogs(container, container.Name).Wait();
+        }
+
         StopContainersAsync().Wait();
         GC.SuppressFinalize(this);
     }
