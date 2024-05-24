@@ -30,7 +30,7 @@ public class PostServiceTests
         var httpClient = new HttpClient();
         var requestUri = new UriBuilder(
             Uri.UriSchemeHttp,
-            postServiceContainer.Hostname,
+            "localhost",
             postsServicePort,
             "api/posts"
         ).Uri;
@@ -56,7 +56,7 @@ public class PostServiceTests
         var httpClient = new HttpClient();
         var requestUri = new UriBuilder(
             Uri.UriSchemeHttp,
-            postServiceContainer.Hostname,
+            "localhost",
             postsServicePort,
             "api/posts"
         ).Uri;
@@ -87,12 +87,12 @@ public class PostServiceTests
 
         var createPostUri = new UriBuilder(
             Uri.UriSchemeHttp,
-            postServiceContainer.Hostname,
+            "localhost",
             postsServicePort,
             "api/posts"
         ).Uri;
 
-                var token = await _auth0Helper.GetAuth0TokenAsync();
+        var token = await _auth0Helper.GetAuth0TokenAsync();
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var testPost = new { content = "Post integration test", author = "Test person" };
@@ -104,7 +104,7 @@ public class PostServiceTests
 
         var getSpecificUri = new UriBuilder(
             Uri.UriSchemeHttp,
-            postServiceContainer.Hostname,
+            "localhost",
             postsServicePort,
             "api/posts/1"
         ).Uri;

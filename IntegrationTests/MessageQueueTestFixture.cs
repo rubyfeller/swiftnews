@@ -2,19 +2,18 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using IntegrationTests.Helpers;
 using Xunit;
-using System.Diagnostics;
 using DotNet.Testcontainers.Networks;
 
 namespace IntegrationTests;
 
-[CollectionDefinition("LikeServiceTests")]
-public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServiceTestFixture>
+[CollectionDefinition("MessageQueueTests")]
+public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQueueTestFixture>
 {
     public Auth0Helper Auth0Helper { get; private set; }
     private readonly IDictionary<string, IContainer> _containers = new Dictionary<string, IContainer>();
     private readonly INetwork _network;
 
-    public LikeServiceTestFixture()
+    public MessageQueueTestFixture()
     {
         Auth0Helper = new Auth0Helper();
         _network = new NetworkBuilder().Build();
