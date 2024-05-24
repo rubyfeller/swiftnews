@@ -71,6 +71,8 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .DependsOn(rabbitmqContainer)
             .Build();
 
+        Console.WriteLine("Starting LikeServiceContainer");
+
         await likeServiceContainer.StartAsync().ConfigureAwait(true);
         _containers["likeservice"] = likeServiceContainer;
 
@@ -95,6 +97,13 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
         _containers["postgres"] = container;
 
         return container;
+    }
+
+    public async Task PrintContainerLogs(IContainer container, string containerName)
+    {
+        var logs = await container.GetLogsAsync(timestampsEnabled: true).ConfigureAwait(false);
+        Console.WriteLine($"{containerName} logs:");
+        Console.WriteLine(logs);
     }
 
     public async Task<IContainer> StartPostServiceContainerAsync(IContainer postgresContainer, IContainer rabbitmqContainer)
@@ -132,6 +141,11 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
 
     public void Dispose()
     {
+        foreach (var container in _containers.Values)
+        {
+            PrintContainerLogs(container, container.Name).Wait();
+        }
+
         StopContainersAsync().Wait();
         GC.SuppressFinalize(this);
     }
