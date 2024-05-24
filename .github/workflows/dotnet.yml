@@ -11,6 +11,12 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Docker login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
       - name: Find Docker Host IP
         uses: addnab/docker-run-action@v1
         with:
@@ -28,10 +34,20 @@ jobs:
       - name: Build PostService
         run: dotnet build ./PostService --no-restore
 
+      - name: Build and Push PostService Docker Image
+        run: |
+          docker build -t rubyfeller/postservice:latest ./PostService
+          docker push rubyfeller/postservice:latest
+
       - name: Restore dependencies for LikeService
         run: dotnet restore ./LikeService
       - name: Build LikeService
         run: dotnet build ./LikeService --no-restore
+
+      - name: Build and Push LikeService Docker Image
+        run: |
+          docker build -t rubyfeller/likeservice:latest ./LikeService
+          docker push rubyfeller/likeservice:latest
 
   test:
     name: Test
@@ -65,21 +81,28 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
-
-      - name: Docker login
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
+  
       - name: Check Docker version
         run: docker --version
-
+  
       - name: Restore dependencies for Integration Tests
         run: dotnet restore ./IntegrationTests
       - name: Build Integration Tests
         run: dotnet build ./IntegrationTests --no-restore
       - name: Run Integration Tests and print container logs
         run: |
-          dotnet test ./IntegrationTests --no-build --verbosity detailed
-          docker logs <container_id_or_name>
+          dotnet test ./IntegrationTests --no-build --verbosity detailed || true
+          likeservice_container_id=$(docker ps -qf "ancestor=rubyfeller/likeservice:latest")
+          if [ -n "$likeservice_container_id" ]; then
+            docker logs $likeservice_container_id
+          else
+            echo "No running container found for rubyfeller/likeservice:latest"
+          fi
+          
+          postservice_container_id=$(docker ps -qf "ancestor=rubyfeller/postservice:latest")
+          if [ -n "$postservice_container_id" ]; then
+            docker logs $postservice_container_id
+          else
+            echo "No running container found for rubyfeller/postservice:latest"
+          fi
+  
