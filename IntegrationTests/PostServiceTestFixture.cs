@@ -73,11 +73,25 @@ public class PostServiceTestFixture : IDisposable, ICollectionFixture<PostServic
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await container.StartAsync();
-        _containers["postservice"] = container;
+        var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
+        try
+        {
+            await container.StartAsync(cancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TimeoutException("Container startup timed out.");
+        }
+        finally
+        {
+            cancellationTokenSource.Dispose();
+        }
+
+        _containers["postservice"] = container;
         return container;
     }
+
 
     private async Task StopContainersAsync()
     {
