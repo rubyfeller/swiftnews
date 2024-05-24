@@ -5,96 +5,97 @@ using Xunit;
 
 namespace IntegrationTests;
 
-// [Collection("LikeServiceTests")]
-// public class MessageExchangeTests
-// {
-//     private readonly LikeServiceTestFixture _fixture;
+[Collection("MessageQueueTests")]
+public class MessageExchangeTests
+{
+    private readonly MessageQueueTestFixture _fixture;
 
-//     public MessageExchangeTests(LikeServiceTestFixture fixture)
-//     {
-//         _fixture = fixture;
-//     }
+    public MessageExchangeTests(MessageQueueTestFixture fixture)
+    {
+        _fixture = fixture;
+    }
 
-//     [Fact]
-//     public async Task TestMessageExchange()
-//     {
-//         // Arrange
-//         var rabbitmqContainer = await _fixture.StartRabbitMQContainerAsync();
+    [Fact]
+    public async Task TestMessageExchange()
+    {
+        // Arrange
+        var rabbitmqContainer = await _fixture.StartRabbitMQContainerAsync();
 
-//         var factory = new ConnectionFactory()
-//             { HostName = "localhost", Port = rabbitmqContainer.GetMappedPublicPort(5672) };
+        await Task.Delay(TimeSpan.FromSeconds(10));
 
-//         // Act
-//         using var connection = factory.CreateConnection();
-//         using var channel = connection.CreateModel();
-//         channel.QueueDeclare(queue: "test_queue", durable: false, exclusive: false, autoDelete: false,
-//             arguments: null);
+        var factory = new ConnectionFactory()
+        { HostName = "localhost", Port = rabbitmqContainer.GetMappedPublicPort(5672) };
 
-//         var consumer = new EventingBasicConsumer(channel);
-//         var tcs = new TaskCompletionSource<bool>();
-//         consumer.Received += (model, ea) =>
-//         {
-//             var receivedMessage = Encoding.UTF8.GetString(ea.Body.ToArray());
+        // Act
+        using var connection = factory.CreateConnection();
+        using var channel = connection.CreateModel();
+        channel.QueueDeclare(queue: "test_queue", durable: false, exclusive: false, autoDelete: false,
+            arguments: null);
 
-//             // Assert
-//             Assert.Equal("post123", receivedMessage);
-//             tcs.SetResult(true);
-//         };
-//         channel.BasicConsume(queue: "test_queue", autoAck: true, consumer: consumer);
+        var consumer = new EventingBasicConsumer(channel);
+        var tcs = new TaskCompletionSource<bool>();
+        consumer.Received += (model, ea) =>
+        {
+            var receivedMessage = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-//         var message = "post123";
-//         var body = Encoding.UTF8.GetBytes(message);
-//         channel.BasicPublish(exchange: "", routingKey: "test_queue", basicProperties: null, body: body);
+            // Assert
+            Assert.Equal("post123", receivedMessage);
+            tcs.SetResult(true);
+        };
+        channel.BasicConsume(queue: "test_queue", autoAck: true, consumer: consumer);
 
-//         await tcs.Task;
-//     }
+        var message = "post123";
+        var body = Encoding.UTF8.GetBytes(message);
+        channel.BasicPublish(exchange: "", routingKey: "test_queue", basicProperties: null, body: body);
 
-//     [Fact]
-//     public async Task TestLikeServiceSendsMessage()
-//     {
-//         // Arrange
-//         var rabbitmqContainer = await _fixture.StartRabbitMQContainerAsync();
-//         var mongoContainer = await _fixture.StartMongoContainerAsync();
-//         var likeServiceContainer = await _fixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
-        
-//         var likeServicePort = likeServiceContainer.GetMappedPublicPort(8081);
-//         var rabbitmqPort = rabbitmqContainer.GetMappedPublicPort(5672);
+        await tcs.Task;
+    }
 
-//         var factory = new ConnectionFactory() { HostName = "localhost", Port = rabbitmqPort };
-//         var httpClient = new HttpClient();
+    [Fact]
+    public async Task TestLikeServiceSendsMessage()
+    {
+        // Arrange
+        var rabbitmqContainer = await _fixture.StartRabbitMQContainerAsync();
+        await Task.Delay(TimeSpan.FromSeconds(20));
+        var mongoContainer = await _fixture.StartMongoContainerAsync();
+        var likeServiceContainer = await _fixture.StartLikeServiceContainerAsync(mongoContainer, rabbitmqContainer);
 
-//         // Act
-//         using var connection = factory.CreateConnection();
-//         using var channel = connection.CreateModel();
+        var factory = new ConnectionFactory() { HostName = "127.0.0.1", Port = rabbitmqContainer.GetMappedPublicPort(5672) };
+        var httpClient = new HttpClient();
 
-//         channel.ExchangeDeclare(exchange: "pubsub", type: ExchangeType.Fanout);
-//         var queueName = channel.QueueDeclare().QueueName;
-//         channel.QueueBind(queue: queueName, exchange: "pubsub", routingKey: "");
+        // Act
+        using var connection = factory.CreateConnection();
+        using var channel = connection.CreateModel();
 
-//         var consumer = new EventingBasicConsumer(channel);
-//         var tcs = new TaskCompletionSource<string>();
+        channel.ExchangeDeclare(exchange: "pubsub", type: ExchangeType.Fanout);
+        var queueName = channel.QueueDeclare().QueueName;
+        channel.QueueBind(queue: queueName, exchange: "pubsub", routingKey: "");
 
-//         consumer.Received += (model, ea) =>
-//         {
-//             var body = ea.Body.ToArray();
-//             var message = Encoding.UTF8.GetString(body);
-//             tcs.SetResult(message);
-//         };
-//         channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+        var consumer = new EventingBasicConsumer(channel);
+        var tcs = new TaskCompletionSource<string>();
 
-//         var likeResponse = await httpClient.PostAsync($"http://localhost:{likeServicePort}/api/l/likes/7", null);
-//         likeResponse.EnsureSuccessStatusCode();
+        consumer.Received += (model, ea) =>
+        {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+            tcs.SetResult(message);
+        };
+        channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
 
-//         if (await Task.WhenAny(tcs.Task, Task.Delay(5000)) == tcs.Task)
-//         {
-//             var receivedMessage = await tcs.Task;
+        var likeServicePort = likeServiceContainer.GetMappedPublicPort(8081);
+        var likeResponse = await httpClient.PostAsync($"http://127.0.0.1:{likeServicePort}/api/l/likes/7", null);
+        likeResponse.EnsureSuccessStatusCode();
 
-//             // Assert
-//             Assert.Equal("{\"action\":\"add\",\"postId\":7}", receivedMessage);
-//         }
-//         else
-//         {
-//             throw new TimeoutException("The test timed out waiting for the message to be received.");
-//         }
-//     }
-// }
+        if (await Task.WhenAny(tcs.Task, Task.Delay(10000)) == tcs.Task)
+        {
+            var receivedMessage = await tcs.Task;
+
+            // Assert
+            Assert.Equal("{\"action\":\"add\",\"postId\":7}", receivedMessage);
+        }
+        else
+        {
+            throw new TimeoutException("The test timed out waiting for the message to be received.");
+        }
+    }
+}

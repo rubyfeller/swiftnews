@@ -6,14 +6,14 @@ using DotNet.Testcontainers.Networks;
 
 namespace IntegrationTests;
 
-[CollectionDefinition("LikeServiceTests")]
-public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServiceTestFixture>
+[CollectionDefinition("MessageQueueTests")]
+public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQueueTestFixture>
 {
     public Auth0Helper Auth0Helper { get; private set; }
     private readonly IDictionary<string, IContainer> _containers = new Dictionary<string, IContainer>();
     private readonly INetwork _network;
 
-    public LikeServiceTestFixture()
+    public MessageQueueTestFixture()
     {
         Auth0Helper = new Auth0Helper();
         _network = new NetworkBuilder().Build();
@@ -61,18 +61,28 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithNetwork(_network)
             .WithNetworkAliases("likeservice")
             .WithPortBinding(8081, true)
-            .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString",
-            $"mongodb://mongo:27017")
+            .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString", $"mongodb://mongo:27017")
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
-            .DependsOn(mongoContainer)
-            .DependsOn(rabbitmqContainer)
             .Build();
 
-        await likeServiceContainer.StartAsync().ConfigureAwait(true);
-        _containers["likeservice"] = likeServiceContainer;
+        Console.WriteLine("Starting LikeService container...");
+
+        try
+        {
+            await likeServiceContainer.StartAsync().ConfigureAwait(true);
+            _containers["likeservice"] = likeServiceContainer;
+            Console.WriteLine("LikeService container started successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error starting LikeService container: {ex.Message}");
+            var logs = await likeServiceContainer.GetLogsAsync(timestampsEnabled: true).ConfigureAwait(false);
+            Console.WriteLine("LikeService container logs:");
+            Console.WriteLine(logs);
+            throw;
+        }
 
         return likeServiceContainer;
     }
@@ -97,6 +107,13 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
         return container;
     }
 
+    public async Task PrintContainerLogs(IContainer container, string containerName)
+    {
+        var logs = await container.GetLogsAsync(timestampsEnabled: true).ConfigureAwait(false);
+        Console.WriteLine($"{containerName} logs:");
+        Console.WriteLine(logs);
+    }
+
     public async Task<IContainer> StartPostServiceContainerAsync(IContainer postgresContainer, IContainer rabbitmqContainer)
     {
         var postServiceContainer = new ContainerBuilder()
@@ -114,19 +131,10 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        Console.WriteLine("Starting PostServiceContainer");
-
         await postServiceContainer.StartAsync().ConfigureAwait(true);
         _containers["postservice"] = postServiceContainer;
 
         return postServiceContainer;
-    }
-
-    public async Task PrintContainerLogs(IContainer container, string containerName)
-    {
-        var logs = await container.GetLogsAsync(timestampsEnabled: true).ConfigureAwait(false);
-        Console.WriteLine($"{containerName} logs:");
-        Console.WriteLine(logs);
     }
 
     private async Task StopContainersAsync()
