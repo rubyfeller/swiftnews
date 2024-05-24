@@ -31,7 +31,7 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Server startup complete"))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(true);
         _containers["rabbitmq"] = container;
 
         return container;
@@ -45,9 +45,10 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithNetworkAliases("mongo")
             .WithPortBinding(27017, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Waiting for connections"))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(true);
         _containers["mongo"] = container;
 
         return container;
@@ -65,12 +66,12 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(request => request.ForPath("/")))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
             .DependsOn(mongoContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await likeServiceContainer.StartAsync();
+        await likeServiceContainer.StartAsync().ConfigureAwait(true);
         _containers["likeservice"] = likeServiceContainer;
 
         return likeServiceContainer;

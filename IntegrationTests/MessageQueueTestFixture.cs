@@ -31,7 +31,7 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Server startup complete"))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(true);
         _containers["rabbitmq"] = container;
 
         return container;
@@ -45,9 +45,10 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .WithNetworkAliases("mongo")
             .WithPortBinding(27017, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Waiting for connections"))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(true);
         _containers["mongo"] = container;
 
         return container;
@@ -70,7 +71,7 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await likeServiceContainer.StartAsync();
+        await likeServiceContainer.StartAsync().ConfigureAwait(true);
         _containers["likeservice"] = likeServiceContainer;
 
         return likeServiceContainer;
@@ -90,7 +91,7 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("database system is ready to accept connections"))
             .Build();
 
-        await container.StartAsync();
+        await container.StartAsync().ConfigureAwait(true);
         _containers["postgres"] = container;
 
         return container;
@@ -113,7 +114,7 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .DependsOn(rabbitmqContainer)
             .Build();
 
-        await postServiceContainer.StartAsync();
+        await postServiceContainer.StartAsync().ConfigureAwait(true);
         _containers["postservice"] = postServiceContainer;
 
         return postServiceContainer;
