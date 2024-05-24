@@ -66,7 +66,6 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
             .DependsOn(mongoContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
