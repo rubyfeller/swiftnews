@@ -2,7 +2,6 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using IntegrationTests.Helpers;
 using Xunit;
-using System.Diagnostics;
 using DotNet.Testcontainers.Networks;
 
 namespace IntegrationTests;
@@ -62,11 +61,11 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithNetworkAliases("likeservice")
             .WithPortBinding(8081, true)
             .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString",
-                "mongodb://mongo:27017")
+            $"mongodb://mongo:27017")
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
+            // .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
             .DependsOn(mongoContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
@@ -105,11 +104,11 @@ public class LikeServiceTestFixture : IDisposable, ICollectionFixture<LikeServic
             .WithNetworkAliases("postservice")
             .WithPortBinding(8080, true)
             .WithEnvironment("ConnectionStrings__PostsConn",
-                "Server=postgres;Port=5432;Database=postgres;User Id=postgres;Password=postgres;")
+            $"Server=postgres;Port=5432;Database=postgres;User Id=postgres;Password=postgres;")
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
+            // .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
             .DependsOn(postgresContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
