@@ -66,6 +66,7 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
             .DependsOn(mongoContainer)
             .DependsOn(rabbitmqContainer)
             .Build();
@@ -138,14 +139,14 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
         await _network.DeleteAsync();
     }
 
-    public void Dispose()
-    {
-        foreach (var container in _containers.Values)
+        public void Dispose()
         {
-            PrintContainerLogs(container, container.Name).Wait();
-        }
+            foreach (var container in _containers.Values)
+            {
+                PrintContainerLogs(container, container.Name).Wait();
+            }
 
-        StopContainersAsync().Wait();
-        GC.SuppressFinalize(this);
-    }
+            StopContainersAsync().Wait();
+            GC.SuppressFinalize(this);
+        }
 }
