@@ -3,6 +3,7 @@ using DotNet.Testcontainers.Containers;
 using IntegrationTests.Helpers;
 using Xunit;
 using DotNet.Testcontainers.Networks;
+using DotNet.Testcontainers.Networks;
 
 namespace IntegrationTests;
 
