@@ -61,20 +61,28 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
             .WithNetwork(_network)
             .WithNetworkAliases("likeservice")
             .WithPortBinding(8081, true)
-            .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString",
-            $"mongodb://mongo:27017")
+            .WithEnvironment("LikeStoreDatabaseSettings__ConnectionString", $"mongodb://mongo:27017")
             .WithEnvironment("RabbitMQHost", "rabbitmq")
             .WithEnvironment("RabbitMQPort", "5672")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8081))
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Now listening on"))
-            .DependsOn(mongoContainer)
-            .DependsOn(rabbitmqContainer)
             .Build();
 
-        Console.WriteLine("Starting LikeServiceContainer");
+        Console.WriteLine("Starting LikeService container...");
 
-        await likeServiceContainer.StartAsync().ConfigureAwait(true);
-        _containers["likeservice"] = likeServiceContainer;
+        try
+        {
+            await likeServiceContainer.StartAsync().ConfigureAwait(true);
+            _containers["likeservice"] = likeServiceContainer;
+            Console.WriteLine("LikeService container started successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error starting LikeService container: {ex.Message}");
+            var logs = await likeServiceContainer.GetLogsAsync(timestampsEnabled: true).ConfigureAwait(false);
+            Console.WriteLine("LikeService container logs:");
+            Console.WriteLine(logs);
+            throw;
+        }
 
         return likeServiceContainer;
     }
@@ -139,14 +147,14 @@ public class MessageQueueTestFixture : IDisposable, ICollectionFixture<MessageQu
         await _network.DeleteAsync();
     }
 
-        public void Dispose()
+    public void Dispose()
+    {
+        foreach (var container in _containers.Values)
         {
-            foreach (var container in _containers.Values)
-            {
-                PrintContainerLogs(container, container.Name).Wait();
-            }
-
-            StopContainersAsync().Wait();
-            GC.SuppressFinalize(this);
+            PrintContainerLogs(container, container.Name).Wait();
         }
+
+        StopContainersAsync().Wait();
+        GC.SuppressFinalize(this);
+    }
 }
