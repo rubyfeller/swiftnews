@@ -16,10 +16,11 @@ spec:
         image: k3d-ruby:5000/postservice:v0.29
         resources:
           limits:
-            cpu: "1000m"
+            cpu: "200m"
+            memory: "128Mi"
           requests:
-            cpu: "300m"
-
+            cpu: "100m"
+            memory: "64Mi"
 ---
 apiVersion: v1
 kind: Service
