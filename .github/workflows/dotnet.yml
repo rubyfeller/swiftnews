@@ -17,12 +17,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Find Docker Host IP
-        uses: addnab/docker-run-action@v1
-        with:
-          image: alpine:latest
-          run: apk update > /dev/null && apk add iproute2 > /dev/null && ip -4 route show default | cut -d' ' -f3
-
       - uses: actions/checkout@v3
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -89,20 +83,5 @@ jobs:
         run: dotnet restore ./IntegrationTests
       - name: Build Integration Tests
         run: dotnet build ./IntegrationTests --no-restore
-      - name: Run Integration Tests and print container logs
-        run: |
-          dotnet test ./IntegrationTests --no-build --verbosity detailed || true
-          likeservice_container_id=$(docker ps -qf "ancestor=rubyfeller/likeservice:latest")
-          if [ -n "$likeservice_container_id" ]; then
-            docker logs $likeservice_container_id
-          else
-            echo "No running container found for rubyfeller/likeservice:latest"
-          fi
-          
-          postservice_container_id=$(docker ps -qf "ancestor=rubyfeller/postservice:latest")
-          if [ -n "$postservice_container_id" ]; then
-            docker logs $postservice_container_id
-          else
-            echo "No running container found for rubyfeller/postservice:latest"
-          fi
-  
+      - name: Run Integration Tests
+        run: dotnet test ./IntegrationTests --no-build --verbosity detailed || true
