@@ -46,14 +46,14 @@ const createUniquePost = async (page: Page, message: string) => {
 
 // Tests
 test('should navigate to the latest page', async ({ page }) => {
-    await page.goto('http://localhost:3000/');
+    await page.goto('/');
     await page.click('text=Latest messages');
-    await expect(page).toHaveURL('http://localhost:3000/latest');
+    await expect(page).toHaveURL('/latest');
     await expect(page.locator('h1')).toContainText('Latest posts');
 });
 
 test('should create tweet', async ({ page }) => {
-    await page.goto('http://localhost:3000/latest');
+    await page.goto('/latest');
     await expect(page.locator('h1')).toContainText('Latest posts');
     const message = `Hello, World! ${Date.now()}`;
     await page.fill('input', message);
@@ -63,7 +63,7 @@ test('should create tweet', async ({ page }) => {
 });
 
 test('should like a tweet', async ({ page }) => {
-    await page.goto('http://localhost:3000/latest');
+    await page.goto('/latest');
     await expect(page.locator('h1')).toContainText('Latest posts');
     const message = `Hello, World! ${Date.now()}`;
     const postId = await createUniquePost(page, message);
@@ -76,7 +76,7 @@ test('should like a tweet', async ({ page }) => {
 });
 
 test('should delete a tweet', async ({ page }) => {
-    await page.goto('http://localhost:3000/latest');
+    await page.goto('/latest');
     await expect(page.locator('h1')).toContainText('Latest posts');
     const message = `Hello, World! ${Date.now()}`;
     const postId = await createUniquePost(page, message);

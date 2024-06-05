@@ -62,6 +62,9 @@ jobs:
         AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
       run: cd frontend && npm run build
 
+    - name: Start frontend server
+      run: cd frontend && npm run start
+
     - name: Run Playwright tests
       run: cd frontend && npx playwright test
 
