@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useUser } from "@auth0/nextjs-auth0/client";
+import { API_URL_POSTS  } from '../../../config';
 
 interface AddPostFormProps {
   accessToken?: string | null;
@@ -14,7 +15,7 @@ const AddPostForm: React.FC<AddPostFormProps> = ({ accessToken, onPostAdded }) =
     e.preventDefault();
 
     try {
-      const response = await fetch('http://api.localhost:9080/api/posts', {
+      const response = await fetch(`${API_URL_POSTS}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

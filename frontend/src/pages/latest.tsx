@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import MessageItem from '../app/components/message-item';
-import { FaHeart } from 'react-icons/fa';
 import { useUser } from "@auth0/nextjs-auth0/client";
 import AddPostForm from '@/app/components/add-post-form';
+import { API_URL_POSTS, API_URL_LIKE, API_URL_USER } from '../../config';
 
 interface Post {
   content: string;
@@ -16,10 +16,9 @@ const LatestPosts: React.FC = () => {
   const { user, isLoading, error } = useUser();
   const [posts, setPosts] = useState<Post[]>([]);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [postAdded, setPostAdded] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [hasMore, setHasMore] = useState<boolean>(true);
 
   const fetchAccessToken = async () => {
     try {
@@ -42,7 +41,7 @@ const LatestPosts: React.FC = () => {
         throw new Error('Access token is missing');
       }
 
-      const postsResponse = await fetch(`http://api.localhost:9080/api/posts?page=${pageNumber}&pageSize=10`, {
+      const postsResponse = await fetch(`${API_URL_POSTS}?page=${pageNumber}&pageSize=10`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -50,6 +49,8 @@ const LatestPosts: React.FC = () => {
 
       const postData: Post[] = await postsResponse.json();
       if (postData.length === 0) {
+        setHasMore(false);
+        setLoading(false);
         return;
       }
 
@@ -61,11 +62,7 @@ const LatestPosts: React.FC = () => {
         author: authors[post.userId],
       }));
 
-      if (pageNumber === 1) {
-        setPosts(postsWithAuthors);
-      } else {
-        setPosts(prevPosts => [...prevPosts, ...postsWithAuthors]);
-      }
+      setPosts(prevPosts => pageNumber === 1 ? postsWithAuthors : [...prevPosts, ...postsWithAuthors]);
 
       setPage(pageNumber + 1);
       setLoading(false);
@@ -82,7 +79,7 @@ const LatestPosts: React.FC = () => {
       try {
         if (!userId) continue;
 
-        const userInfoResponse = await fetch(`http://api.localhost:9080/api/user/${userId}`, {
+        const userInfoResponse = await fetch(`${API_URL_USER}/${userId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -110,17 +107,17 @@ const LatestPosts: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && !error && user && accessToken && !postAdded) {
-      fetchPosts(page);
+    if (!isLoading && !error && user && accessToken) {
+      fetchPosts(1);
     }
-  }, [isLoading, error, user, accessToken, postAdded]);
+  }, [isLoading, error, user, accessToken]);
 
   useEffect(() => {
     const handleScroll = () => {
       if (
-        containerRef.current &&
-        containerRef.current.scrollTop + containerRef.current.clientHeight >= containerRef.current.scrollHeight &&
-        !loading
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100 &&
+        !loading &&
+        hasMore
       ) {
         setLoading(true);
         fetchPosts(page);
@@ -132,11 +129,11 @@ const LatestPosts: React.FC = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [loading, page]);
+  }, [loading, page, hasMore]);
 
   const handleLike = async (postId: number) => {
     try {
-      const response = await fetch(`http://api.localhost:9080/api/l/likes/${postId}`, {
+      const response = await fetch(`${API_URL_LIKE}/${postId}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -144,7 +141,7 @@ const LatestPosts: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchPosts(page);
+        fetchPosts(1); // Refresh posts after like
       }
     } catch (error) {
       console.error('Error liking post:', error);
@@ -152,13 +149,12 @@ const LatestPosts: React.FC = () => {
   };
 
   const handlePostAdded = () => {
-    setPostAdded(true);
-    setTimeout(() => setPostAdded(false), 1000);
+    fetchPosts(1); // Refresh posts after a new post is added
   };
 
   const handleDelete = async (postId: number) => {
     try {
-      const response = await fetch(`http://api.localhost:9080/api/posts/${postId}`, {
+      const response = await fetch(`${API_URL_POSTS}/${postId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -166,7 +162,7 @@ const LatestPosts: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchPosts(page);
+        fetchPosts(1); // Refresh posts after delete
       }
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -181,20 +177,9 @@ const LatestPosts: React.FC = () => {
       {user && !isLoading && !error && (
         <>
           <h1 className="text-3xl font-bold mb-6 mt-8 text-center">Latest posts</h1>
-          <div className="w-full max-w-lg" ref={containerRef}>
-            {posts.map((post, index) => (
-              <div key={index} className="bg-white shadow-md rounded-md p-4 mb-4 flex items-start">
-                <div className="flex-grow">
-                  <MessageItem content={post.content} userId={post.userId} author={post.author} likes={post.likeCount} id={post.id} onDelete={handleDelete} />
-                </div>
-                <button
-                  className="ml-auto text-red-500 hover:text-purple-600 transition-colors focus:outline-none flex items-center"
-                  onClick={() => handleLike(post.id)}
-                >
-                  <FaHeart className="mr-1" />
-                  Like
-                </button>
-              </div>
+          <div className="w-full max-w-lg">
+            {posts.map((post) => (
+              <MessageItem key={post.id} post={post} onLike={handleLike} onDelete={handleDelete} />
             ))}
           </div>
           <AddPostForm accessToken={accessToken} onPostAdded={handlePostAdded} />
