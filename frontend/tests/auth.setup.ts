@@ -7,6 +7,11 @@ if (process.env.NODE_ENV !== 'production') {
     config({ path: '.env.local' });
 }
 
+config({ path: '.env' });
+
+console.log('AUTH_EMAIL:', process.env.AUTH_EMAIL);
+console.log('AUTH_PASSWORD:', process.env.AUTH_PASSWORD);
+
 setup('authenticate', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('login-button').click();
