@@ -3,7 +3,9 @@ import { config } from 'dotenv';
 
 const authFile = 'playwright/.auth/user.json';
 
-config({ path: '.env.local' });
+if (process.env.NODE_ENV !== 'production') {
+    config({ path: '.env.local' });
+}
 
 setup('authenticate', async ({ page }) => {
     await page.goto('/');
