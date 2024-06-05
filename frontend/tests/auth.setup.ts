@@ -7,7 +7,7 @@ if (process.env.NODE_ENV !== 'production') {
     config({ path: '.env.local' });
 }
 
-config({ path: '.env' });
+config({ path: '.env.production' });
 
 console.log('AUTH_EMAIL:', process.env.AUTH_EMAIL);
 console.log('AUTH_PASSWORD:', process.env.AUTH_PASSWORD);
@@ -19,6 +19,6 @@ setup('authenticate', async ({ page }) => {
     await page.getByLabel('Email address*').fill(process.env.AUTH_EMAIL ?? '');
     await page.getByLabel('Password*').fill(process.env.AUTH_PASSWORD ?? '');
     await page.click('button[type="submit"]');
-
+    
     await page.context().storageState({ path: authFile });
 });

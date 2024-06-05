@@ -8,76 +8,42 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 60
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-
-    - name: Install dependencies
-      run: cd frontend && npm ci
-
-    - name: Install Playwright Browsers
-      run: cd frontend && npx playwright install --with-deps
-
-    - name: Start services with Docker Compose
-      run: docker-compose up -d
-
-    - name: Copy .env file
-      run: cp .env frontend/.env
-
-    - name: Set environment variables in .env file
-      run: |
-        sed -i 's/^AUTH0_SECRET=.*/AUTH0_SECRET=${{ secrets.AUTH0_SECRET }}/' frontend/.env
-        sed -i 's/^AUTH0_BASE_URL=.*/AUTH0_BASE_URL=${{ secrets.AUTH0_BASE_URL }}/' frontend/.env
-        sed -i 's/^AUTH0_ISSUER_BASE_URL=.*/AUTH0_ISSUER_BASE_URL=${{ secrets.AUTH0_ISSUER_BASE_URL }}/' frontend/.env
-        sed -i 's/^NEXT_PUBLIC_AUTH0_ISSUER_BASE_URL=.*/NEXT_PUBLIC_AUTH0_ISSUER_BASE_URL=${{ secrets.NEXT_PUBLIC_AUTH0_ISSUER_BASE_URL }}/' frontend/.env
-        sed -i 's/^AUTH0_CLIENT_ID=.*/AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}/' frontend/.env
-        sed -i 's/^AUTH0_CLIENT_SECRET=.*/AUTH0_CLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }}/' frontend/.env
-        sed -i 's/^AUTH0_AUDIENCE=.*/AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }}/' frontend/.env
-        sed -i 's/^AUTH0_SCOPE=.*/AUTH0_SCOPE=${{ secrets.AUTH0_SCOPE }}/' frontend/.env
-        sed -i 's/^NEXT_PUBLIC_API_URL_POSTS=.*/NEXT_PUBLIC_API_URL_POSTS=${{ secrets.NEXT_PUBLIC_API_URL_POSTS }}/' frontend/.env
-        sed -i 's/^NEXT_PUBLIC_API_URL_LIKE=.*/NEXT_PUBLIC_API_URL_LIKE=${{ secrets.NEXT_PUBLIC_API_URL_LIKE }}/' frontend/.env
-        sed -i 's/^NEXT_PUBLIC_API_URL_USER=.*/NEXT_PUBLIC_API_URL_USER=${{ secrets.NEXT_PUBLIC_API_URL_USER }}/' frontend/.env
-        sed -i 's/^NEXT_PUBLIC_KUBERNETES=.*/NEXT_PUBLIC_KUBERNETES=${{ secrets.NEXT_PUBLIC_KUBERNETES }}/' frontend/.env
-        sed -i 's/^AUTH_EMAIL=.*/AUTH_EMAIL=${{ secrets.AUTH_EMAIL }}/' frontend/.env
-        sed -i 's/^AUTH_PASSWORD=.*/AUTH_PASSWORD=${{ secrets.AUTH_PASSWORD }}/' frontend/.env
-
-    - name: Debug Environment Variables
-      run: cat frontend/.env
-
-    - name: Build frontend
-      env:
-        AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
-        AUTH0_BASE_URL: ${{ secrets.AUTH0_BASE_URL }}
-        AUTH0_ISSUER_BASE_URL: ${{ secrets.AUTH0_ISSUER_BASE_URL }}
-        NEXT_PUBLIC_AUTH0_ISSUER_BASE_URL: ${{ secrets.NEXT_PUBLIC_AUTH0_ISSUER_BASE_URL }}
-        AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
-        AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
-        AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
-        AUTH0_SCOPE: ${{ secrets.AUTH0_SCOPE }}
-        NEXT_PUBLIC_API_URL_POSTS: ${{ secrets.NEXT_PUBLIC_API_URL_POSTS }}
-        NEXT_PUBLIC_API_URL_LIKE: ${{ secrets.NEXT_PUBLIC_API_URL_LIKE }}
-        NEXT_PUBLIC_API_URL_USER: ${{ secrets.NEXT_PUBLIC_API_URL_USER }}
-        NEXT_PUBLIC_KUBERNETES: ${{ secrets.NEXT_PUBLIC_KUBERNETES }}
-        AUTH_EMAIL: ${{ secrets.AUTH_EMAIL }}
-        AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
-      run: cd frontend && npm run build
-
-    - name: Run Playwright tests
-      run: cd frontend && npx playwright test
-
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report
-        path: frontend/playwright-report/
-        retention-days: 30
-
-    - name: Shut down Docker Compose services
-      if: always()
-      run: docker-compose down
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      - name: Install Playwright Browsers
+        run: cd frontend && npx playwright install --with-deps
+      - name: Populate .env.production with GitHub secrets
+        run: |
+          echo "AUTH0_SECRET=${{ secrets.AUTH0_SECRET }}" >> frontend/.env.production
+          echo "AUTH0_BASE_URL=${{ secrets.AUTH0_BASE_URL }}" >> frontend/.env.production
+          echo "AUTH0_ISSUER_BASE_URL=${{ secrets.AUTH0_ISSUER_BASE_URL }}" >> frontend/.env.production
+          echo "NEXT_PUBLIC_AUTH0_ISSUER_BASE_URL=${{ secrets.NEXT_PUBLIC_AUTH0_ISSUER_BASE_URL }}" >> frontend/.env.production
+          echo "AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}" >> frontend/.env.production
+          echo "AUTH0_CLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }}" >> frontend/.env.production
+          echo "AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }}" >> frontend/.env.production
+          echo "AUTH0_SCOPE=${{ secrets.AUTH0_SCOPE }}" >> frontend/.env.production
+          echo "NEXT_PUBLIC_API_URL_POSTS=${{ secrets.NEXT_PUBLIC_API_URL_POSTS }}" >> frontend/.env.production
+          echo "NEXT_PUBLIC_API_URL_LIKE=${{ secrets.NEXT_PUBLIC_API_URL_LIKE }}" >> frontend/.env.production
+          echo "NEXT_PUBLIC_API_URL_USER=${{ secrets.NEXT_PUBLIC_API_URL_USER }}" >> frontend/.env.production
+          echo "NEXT_PUBLIC_KUBERNETES=${{ secrets.NEXT_PUBLIC_KUBERNETES }}" >> frontend/.env.production
+          echo "AUTH_EMAIL=${{ secrets.AUTH_EMAIL }}" >> frontend/.env.production
+          echo "AUTH_PASSWORD=${{ secrets.AUTH_PASSWORD }}" >> frontend/.env.production
+      - name: Build frontend
+        run: cd frontend && npm run build
+      - name: Run Playwright tests
+        run: cd frontend && npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+      - name: Shut down Docker Compose services
+        if: always()
+        run: docker-compose down
