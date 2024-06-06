@@ -70,9 +70,8 @@ test('should like a tweet', async ({ page }) => {
     const likeButton = page.locator(`[data-testid=like-button-${postId}]`);
     await scrollUntilVisible(page, `[data-testid=like-button-${postId}]`);
     await likeButton.click();
-    await scrollUntilVisible(page, `[data-testid=post-${postId}] >> text=1`);
-    await page.waitForSelector(`[data-testid=post-${postId}] >> text=0`, { timeout: 10000 });
-    await expect(page.locator(`[data-testid=post-${postId}] >> text=1`)).toBeVisible();
+    await page.reload();
+    await expect(page.locator(`[data-testid=post-${postId}] span.text-gray-600.text-sm.mr-1`)).toContainText('1');
 });
 
 test('should delete a tweet', async ({ page }) => {
