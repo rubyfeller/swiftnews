@@ -35,10 +35,13 @@ spec:
               cpu: "1"
               memory: "1Gi"
               storage: "1Gi"
+              ephemeral-storage: "1Gi"
             requests:
               cpu: "0.5"
               memory: "512Mi"
               storage: "500Mi"
+              ephemeral-storage: "1Gi"
+
   volumeClaimTemplates:
     - metadata:
         name: postgres-pv-storage

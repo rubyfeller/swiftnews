@@ -149,9 +149,13 @@ spec:
             scheme: HTTPS
           periodSeconds: 10
         resources:
+          limits:
+            memory: "200Mi"
+            cpu: "100m"
+            ephemeral-storage: "1Gi"
           requests:
-            cpu: "500m"
-            memory: "512Mi"
+            cpu: "100m"
+            memory: "200Mi"
             storage: "1Gi"
         name: metrics-server
         ports:
