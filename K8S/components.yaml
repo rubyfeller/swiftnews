@@ -130,6 +130,7 @@ spec:
       labels:
         k8s-app: metrics-server
     spec:
+      automountServiceAccountToken: false
       containers:
       - args:
         - --cert-dir=/tmp
@@ -147,6 +148,11 @@ spec:
             port: https
             scheme: HTTPS
           periodSeconds: 10
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+            storage: "1Gi"
         name: metrics-server
         ports:
         - containerPort: 10250

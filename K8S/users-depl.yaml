@@ -11,12 +11,14 @@ spec:
       labels:
         app: userservice
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: userservice
         image: k3d-ruby:5000/userservice:v0.5
         resources:
           limits:
             cpu: "1000m"
+            memory: "512Mi"
           requests:
             cpu: "300m"
 
