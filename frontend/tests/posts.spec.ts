@@ -70,6 +70,7 @@ test('should like a tweet', async ({ page }) => {
     const likeButton = page.locator(`[data-testid=like-button-${postId}]`);
     await scrollUntilVisible(page, `[data-testid=like-button-${postId}]`);
     await likeButton.click();
+    await page.waitForTimeout(5000);
     await page.reload();
     await expect(page.locator(`[data-testid=post-${postId}] span.text-gray-600.text-sm.mr-1`)).toContainText('1');
 });

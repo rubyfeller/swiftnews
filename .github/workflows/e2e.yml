@@ -18,6 +18,19 @@ jobs:
         run: cd frontend && npm ci
       - name: Install Playwright Browsers
         run: cd frontend && npx playwright install --with-deps
+      - name: Start services with Docker Compose
+        run: docker-compose up -d
+      - name: Wait for services to be ready
+        run: |
+          curl -L -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+          chmod +x wait-for-it.sh
+          ./wait-for-it.sh -t 120 localhost:8082 -- echo "UserService is up"
+          ./wait-for-it.sh -t 120 localhost:8080 -- echo "postservice is up"
+          ./wait-for-it.sh -t 120 localhost:5432 -- echo "postgres is up"
+          ./wait-for-it.sh -t 120 localhost:8081 -- echo "likeservice is up"
+          ./wait-for-it.sh -t 120 localhost:15672 -- echo "rabbitmq is up"
+          ./wait-for-it.sh -t 120 localhost:5672 -- echo "rabbitmq is up"
+          ./wait-for-it.sh -t 120 localhost:27017 -- echo "mongodb is up"
       - name: Populate .env.production with GitHub secrets
         run: |
           echo "AUTH0_SECRET=${{ secrets.AUTH0_SECRET }}" >> frontend/.env.production

@@ -43,6 +43,16 @@ jobs:
           docker build -t rubyfeller/likeservice:latest ./LikeService
           docker push rubyfeller/likeservice:latest
 
+      - name: Restore dependencies for UserService
+        run: dotnet restore ./UserService
+      - name: Build UserService
+        run: dotnet build ./UserService --no-restore
+
+      - name: Build and Push UserService Docker Image
+        run: |
+          docker build -t rubyfeller/userservice:latest ./UserService
+          docker push rubyfeller/userservice:latest
+
   test:
     name: Test
     runs-on: ubuntu-latest
