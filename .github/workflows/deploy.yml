@@ -17,14 +17,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           project_id: ${{ secrets.GCP_PROJECT }}
-        
-      - name: Get Google Cloud access token
-        id: get-access-token
-        run: echo "::set-output name=token::$(gcloud auth print-access-token)"
-  
+          
       - name: Configure Docker
         run: |
-          echo "${{ steps.get-access-token.outputs.token }}" | docker login -u oauth2accesstoken --password-stdin https://${{ secrets.AR_ZONE }}-docker.pkg.dev
+          echo "${{ secrets.AR_ACCESSTOKEN }}" | docker login -u oauth2accesstoken --password-stdin https://${{ secrets.AR_ZONE }}-docker.pkg.dev
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
@@ -44,19 +40,19 @@ jobs:
         
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f K8S/mongo-config.yaml
-          kubectl apply -f K8S/mongo-secret.yaml
-          kubectl apply -f K8S/mongo-pv-storage.yaml
-          kubectl apply -f K8S/mongo-plat-depl.yaml
-          kubectl apply -f K8S/postgres-pv-storage.yaml
-          kubectl apply -f K8S/posts-np-srv.yaml
-          kubcetl apply -f K8S/postgres-plat-depl.yaml
-          kubectl apply -f K8S/postgres-userservice-pv.yaml
-          kubectl apply -f K8S/postgres-userservice.yaml
-          kubectl apply -f K8S/rabbitmq-depl.yaml
-          kubectl apply -f K8S/posts-depl.yaml
-          kubectl apply -f K8S/likes-depl.yaml
-          kubectl apply -f K8S/posts-depl.yaml
-          kubectl apply -f K8S/users-depl.yaml
-          kubectl apply -f K8S/apigateway-depl.yaml
-          kubectl apply -f K8S/ingress-srv.yaml
+          kubectl apply -f ./K8S/mongo-config.yaml
+          kubectl apply -f ./K8S/mongo-secret.yaml
+          kubectl apply -f ./K8S/mongo-pv-storage.yaml
+          kubectl apply -f ./K8S/mongo-plat-depl.yaml
+          kubectl apply -f ./K8S/postgres-pv-storage.yaml
+          kubectl apply -f ./K8S/posts-np-srv.yaml
+          kubcetl apply -f ./K8S/postgres-plat-depl.yaml
+          kubectl apply -f ./K8S/postgres-userservice-pv.yaml
+          kubectl apply -f ./K8S/postgres-userservice.yaml
+          kubectl apply -f ./K8S/rabbitmq-depl.yaml
+          kubectl apply -f ./K8S/posts-depl.yaml
+          kubectl apply -f ./K8S/likes-depl.yaml
+          kubectl apply -f ./K8S/posts-depl.yaml
+          kubectl apply -f ./K8S/users-depl.yaml
+          kubectl apply -f ./K8S/apigateway-depl.yaml
+          kubectl apply -f ./K8S/ingress-srv.yaml
