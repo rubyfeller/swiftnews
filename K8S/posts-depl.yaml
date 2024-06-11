@@ -39,20 +39,20 @@ spec:
       port: 80
       targetPort: 8080
 
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: posts-monitor
-  labels:
-    release: prometheus
-    app: prometheus
-spec:
-  jobLabel: job
-  endpoints:
-  - interval: 30s
-    port: postservice
-    path: /metrics
-  selector:
-    matchLabels:
-      app: postservice
+# ---
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: posts-monitor
+#   labels:
+#     release: prometheus
+#     app: prometheus
+# spec:
+#   jobLabel: job
+#   endpoints:
+#   - interval: 30s
+#     port: postservice
+#     path: /metrics
+#   selector:
+#     matchLabels:
+#       app: postservice
