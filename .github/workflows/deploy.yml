@@ -40,6 +40,7 @@ jobs:
         
       - name: Apply Kubernetes manifests
         run: |
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --region ${{ secrets.GKE_ZONE }}
           kubectl apply -f ./K8S/mongo-config.yaml --validate=false
           kubectl apply -f ./K8S/mongo-secret.yaml --validate=false
           kubectl apply -f ./K8S/mongo-pv-storage.yaml --validate=false
