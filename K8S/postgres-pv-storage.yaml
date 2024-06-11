@@ -36,24 +36,6 @@
 #     requests:
 #       storage: 500Mi
 
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-for-pg
-  labels:
-    type: local
-spec:
-  capacity:
-    storage: 500Mi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  gcePersistentDisk:
-    pdName: gke-pv
-    fsType: ext4
-
----
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -61,6 +43,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: "standard"
   resources:
     requests:
       storage: 500Mi
