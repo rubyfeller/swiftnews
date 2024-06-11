@@ -13,7 +13,8 @@ spec:
     spec:
       containers:
       - name: postservice
-        image: k3d-ruby:5000/postservice:v0.29
+        image: us-central1-docker.pkg.dev/sonorous-folio-425007-h2/swiftnews/postservice:latest
+        # image: k3d-ruby:5000/postservice:v0.29
         resources:
           limits:
             cpu: "200m"

@@ -14,7 +14,8 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: userservice
-        image: k3d-ruby:5000/userservice:v0.5
+        image: us-central1-docker.pkg.dev/sonorous-folio-425007-h2/swiftnews/userservice:latest
+        # image: k3d-ruby:5000/userservice:v0.5
         resources:
           limits:
             cpu: "1000m"
