@@ -20,7 +20,9 @@ jobs:
         
       - name: Configure Docker
         run: |
-            gcloud --quiet auth configure-docker
+          gcloud auth login
+          gcloud auth configure-docker --quiet
+          gcloud auth configure-docker ${{ secrets.AR_ZONE }}-docker.pkg.dev
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
