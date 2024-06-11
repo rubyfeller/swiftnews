@@ -4,8 +4,8 @@ metadata:
   name: ingress-srv
 spec:
   rules:
-    - host: api.localhost
-      http: 
+    # - host: api.localhost
+      - http: 
         paths:
           - path: /
             pathType: Prefix
