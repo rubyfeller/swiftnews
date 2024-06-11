@@ -29,14 +29,14 @@ jobs:
     
       - name: Build and push Docker images
         run: |
-          docker build -t ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/apigateway:latest ./ApiGateway
-          docker build -t ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/likeservice:latest ./LikeService
-          docker build -t ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/postservice:latest ./PostService
-          docker build -t ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/userservice:latest ./UserService
-          docker push ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/apigateway:latest
-          docker push ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/likeservice:latest
-          docker push ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/postservice:latest
-          docker push ${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/userservice:latest
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/apigateway:latest ./ApiGateway
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/likeservice:latest ./LikeService
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/postservice:latest ./PostService
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/userservice:latest ./UserService
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/apigateway:latest
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/likeservice:latest
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/postservice:latest
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/userservice:latest
         
       - name: Apply Kubernetes manifests
         run: |
