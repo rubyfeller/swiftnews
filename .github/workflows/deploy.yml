@@ -28,10 +28,18 @@ jobs:
           cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ secrets.GKE_ZONE }}
         
+      - name: Get Google Cloud access token
+        id: get-access-token
+        run: echo "::set-output name=token::$(gcloud auth print-access-token)"    
+        
       - name: Configure Docker
         run: |
-          echo "${{ secrets.AR_ACCESSTOKEN }}" | docker login -u oauth2accesstoken --password-stdin https://${{ secrets.AR_ZONE }}-docker.pkg.dev
-
+          echo "${{ steps.get-access-token.outputs.token }}" | docker login -u oauth2accesstoken --password-stdin https://${{ secrets.AR_ZONE }}-docker.pkg.dev
+        env:
+          ACCESS_TOKEN: ${{ steps.get-access-token.outputs.token }}
+      - name: Mask access token
+        run: echo "::add-mask::$ACCESS_TOKEN"
+  
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
