@@ -63,15 +63,7 @@ jobs:
           kubectl apply -f ./K8S/mongo-secret.yaml --validate=false
           kubectl apply -f ./K8S/mongo-pv-storage.yaml --validate=false
           kubectl apply -f ./K8S/mongo-plat-depl.yaml --validate=false
-          kubectl apply -f ./K8S/postgres-pv-storage.yaml --validate=false
-          kubectl apply -f ./K8S/posts-np-srv.yaml --validate=false
-          kubectl apply -f ./K8S/postgres-plat-depl.yaml --validate=false
-          kubectl apply -f ./K8S/postgres-userservice-pv.yaml --validate=false
-          kubectl apply -f ./K8S/postgres-userservice.yaml --validate=false
           kubectl apply -f ./K8S/rabbitmq-depl.yaml --validate=false
-          kubectl apply -f ./K8S/posts-depl.yaml --validate=false
           kubectl apply -f ./K8S/likes-depl.yaml --validate=false
-          kubectl apply -f ./K8S/posts-depl.yaml --validate=false
-          kubectl apply -f ./K8S/users-depl.yaml --validate=false
           kubectl apply -f ./K8S/apigateway-depl.yaml --validate=false
           kubectl apply -f ./K8S/ingress-srv.yaml --validate=false
