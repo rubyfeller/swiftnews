@@ -1,6 +1,21 @@
 {
     "Routes": [
         {
+            "DownstreamPathTemplate": "/healthz",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "apigateway-clusterip-srv",
+                    "Port": 80
+                }
+            ],
+            "UpstreamPathTemplate": "/healthz",
+            "UpstreamHttpMethod": [
+                "GET"
+            ],
+            "Key": "HealthCheck"
+        },
+        {
             "DownstreamPathTemplate": "/api/l/likes/{everything}",
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [

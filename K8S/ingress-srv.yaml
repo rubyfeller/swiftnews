@@ -22,6 +22,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: "ingress-swiftnews"
+    cloud.google.com/backend-config: '{"default": "gcp-backendconfig"}'
 
 spec:
   defaultBackend:
