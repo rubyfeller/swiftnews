@@ -96,7 +96,7 @@ spec:
               value: password
           volumeMounts:
             - mountPath: "/var/lib/postgresql/data"
-              name: "postgres-pv-storage"
+              name: "postgres-pv-user-storage"
               subPath: data
           resources:
             limits:
@@ -110,7 +110,7 @@ spec:
 
   volumeClaimTemplates:
     - metadata:
-        name: postgres-pv-storage
+        name: postgres-pv-user-storage
       spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:

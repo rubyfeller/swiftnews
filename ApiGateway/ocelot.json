@@ -105,7 +105,8 @@
         },
         "CorsOptions": {
             "AllowedOrigins": [
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "http://swiftnews.rubyfeller.nl"
             ],
             "AllowedHeaders": [
                 "*"
