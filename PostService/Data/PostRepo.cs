@@ -68,6 +68,8 @@ public class PostRepo : IPostRepo
         ArgumentNullException.ThrowIfNull(post);
 
         _context.Posts.Remove(post);
+
+        SaveChanges();
     }
 
     public bool SaveChanges()
