@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using RabbitMQ.Client;
 using UserService.AsyncDataServices;
 using UserService.Auth0;
 using UserService.Data;
@@ -28,7 +27,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowLocalhost3000",
         builder =>
         {
-            builder.WithOrigins("http://localhost:3000")
+            builder.WithOrigins("http://localhost:3000", "https://swiftnews.rubyfeller.nl")
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials();
