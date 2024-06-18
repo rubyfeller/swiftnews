@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -21,41 +22,57 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: gke-gcloud-auth-plugin
-        
+
       - name: Authenticate to GKE cluster
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ secrets.GKE_ZONE }}
-        
+
       - name: Get Google Cloud access token
         id: get-access-token
         run: echo "::set-output name=token::$(gcloud auth print-access-token)"    
-        
+
       - name: Configure Docker
         run: |
           echo "${{ steps.get-access-token.outputs.token }}" | docker login -u oauth2accesstoken --password-stdin https://${{ secrets.AR_ZONE }}-docker.pkg.dev
         env:
           ACCESS_TOKEN: ${{ steps.get-access-token.outputs.token }}
+
       - name: Mask access token
         run: echo "::add-mask::$ACCESS_TOKEN"
-  
+
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-    
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Terraform Plan
+        run: terraform plan -var="project_id=${{ secrets.GCP_PROJECT }}" -var="region=${{ secrets.GKE_REGION }}" -var="zone=${{ secrets.GKE_ZONE }}" -out=tfplan
+        working-directory: terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: terraform
+
       - name: Build and push Docker images
         run: |
-          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/apigateway:latest ./ApiGateway
-          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/likeservice:latest ./LikeService
-          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/postservice:latest ./PostService
-          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/userservice:latest ./UserService
-          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/apigateway:latest
-          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/likeservice:latest
-          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/postservice:latest
-          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{secrets.GCP_PROJECT}}/swiftnews/userservice:latest
-        
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/apigateway:latest ./ApiGateway
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/likeservice:latest ./LikeService
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/postservice:latest ./PostService
+          docker build -t ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/userservice:latest ./UserService
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/apigateway:latest
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/likeservice:latest
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/postservice:latest
+          docker push ${{ secrets.AR_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/swiftnews/userservice:latest
+
       - name: Apply Kubernetes manifests
         run: |
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --region ${{ secrets.GKE_ZONE }}
@@ -75,4 +92,3 @@ jobs:
           kubectl apply -f ./K8S/users-depl.yaml --validate=false
           kubectl apply -f ./K8S/apigateway-depl.yaml --validate=false
           kubectl apply -f ./K8S/ingress-srv.yaml --validate=false
-          
