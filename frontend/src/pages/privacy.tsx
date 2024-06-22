@@ -46,7 +46,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
                 <h2 className="text-xl font-bold mb-4">Data Retention and Deletion</h2>
                 <p className="mb-6">
-                    Users have the right to be forgotten. You can request the deletion of your account and all associated data by pressing the delete button. For insights into your data, please contact support at support@swiftnews.com.
+                    Users have the right to be forgotten. You can request the deletion of your account and all associated data by pressing the delete button. For insights into your data, please contact support at <a href="mailto:support@swiftnews.com" className="text-blue-500 hover:underline">support@swiftnews.com</a>.
                 </p>
             </div>
             <Link href="/">

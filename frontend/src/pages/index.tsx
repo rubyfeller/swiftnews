@@ -81,7 +81,11 @@ function UserComponent() {
           </div>
         )}
         <div className="mt-8 text-gray-500 text-sm italic">
-          By using SwiftNews, you agree to our {' '} 
+          By using SwiftNews, you agree to our {' '}
+          <Link href="/terms">
+            <button className="text-blue-500 hover:underline focus:outline-none">Terms and Conditions</button>
+          </Link>
+          <span className="mx-1">and</span>
           <Link href="/privacy">
             <button className="text-blue-500 hover:underline focus:outline-none">Privacy Policy</button>
           </Link>
